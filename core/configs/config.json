@@ -1,0 +1,41 @@
+{
+  "chrome": {
+    "headless": false,
+    "args": ["--disable-gpu", "--window-size=1920,1080"],
+    "prefs": {
+      "download.default_directory": "C:/Downloads",
+      "profile.default_content_settings.popups": 0
+    },
+    "capabilities": {
+      "acceptInsecureCerts": true,
+      "pageLoadStrategy": "normal"
+    }
+  },
+  "edge": {
+    "headless": true,
+    "args": ["--inprivate", "--window-size=1920,1080"],
+    "prefs": {
+      "download.default_directory": "C:/Downloads"
+    },
+    "capabilities": {
+      "acceptInsecureCerts": true
+    },
+    "ms:edgeOptions": {
+      "excludeSwitches": ["enable-logging"]
+    }
+  },
+  "firefox": {
+    "headless": false,
+    "prefs": {
+      "browser.download.dir": "C:/Downloads",
+      "browser.download.folderList": 2,
+      "browser.helperApps.neverAsk.saveToDisk": "application/pdf"
+    },
+    "capabilities": {
+      "acceptInsecureCerts": true
+    },
+    "moz:firefoxOptions": {
+      "log": {"level": "trace"}
+    }
+  }
+}
