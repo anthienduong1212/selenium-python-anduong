@@ -101,6 +101,61 @@ def not_(cond: Condition) -> Condition:
     return Condition(f"not({cond.name})", lambda e: not cond.predicate(e))
 
 
+def in_viewport() -> Condition:
+    # element có kích thước > 0 và tâm nằm trong viewport
+    def _pred(e: WebElement) -> bool:
+        try:
+            drv = e.parent  # WebDriver (thuộc tính chuẩn của selenium webelement)
+            rect = drv.execute_script("""
+                const r = arguments[0].getBoundingClientRect();
+                return {cx: Math.floor(r.left + r.width/2),
+                        cy: Math.floor(r.top  + r.height/2),
+                        w: r.width, h: r.height};
+            """, e)
+            if rect["w"] <= 0 or rect["h"] <= 0:
+                return False
+            vw, vh = drv.execute_script(
+                "return [window.innerWidth||document.documentElement.clientWidth,"
+                "        window.innerHeight||document.documentElement.clientHeight];"
+            )
+            return 0 <= rect["cx"] < vw and 0 <= rect["cy"] < vh
+        except Exception:
+            return False
+
+    return Condition("in_viewport", _pred)
+
+
+def not_covered() -> Condition:
+    # phần tử trên cùng tại tâm là chính nó (hoặc con của nó) → không bị overlay chặn
+    def _pred(e: WebElement) -> bool:
+        try:
+            drv = e.parent
+            cx, cy = drv.execute_script("""
+                const r = arguments[0].getBoundingClientRect();
+                return [Math.floor(r.left + r.width/2), Math.floor(r.top + r.height/2)];
+            """, e)
+            top_el = drv.execute_script("return document.elementFromPoint(arguments[0], arguments[1]);", cx, cy)
+            # cùng element, hoặc element ở trên là con của e
+            return top_el == e or drv.execute_script("return arguments[0].contains(arguments[1]);", e, top_el)
+        except Exception:
+            return False
+
+    return Condition("not_covered", _pred)
+
+
+def click_ready() -> Condition:
+    # “clickable++”: visible + enabled + in_viewport + not_covered
+    def _pred(e: WebElement) -> bool:
+        try:
+            if not e.is_displayed() or not e.is_enabled():
+                return False
+        except Exception:
+            return False
+        return in_viewport().predicate(e) and not_covered().predicate(e)
+
+    return Condition("click_ready", _pred)
+
+
 # Alias “should_be / should_have” style
 be_visible = visible
 be_hidden = hidden

@@ -3,20 +3,19 @@ from core.waiter.wait import Waiter
 from core.configs.config import Configuration
 from core.drivers.driver_manager import DriverManager
 from core.drivers.driver_conditions import DriverCondition
-from core.reports.reporting import step, attach_text
+from core.reports.reporting import AllureReporter
 
 
 class DriverWait:
     def __init__(self, config: Configuration):
         self.waiter = Waiter(
-            timeout_s=config.timeout_ms / 1000.0,
+            timeout_s=config.wait_timeout_ms / 1000.0,
             poll_s=config.polling_interval_ms / 1000.0,
         )
         self.config = config
 
     def until(self, *conds: DriverCondition):
-        d = DriverManager.get_driver(self.config)
-        # d = DriverManager.get_current_driver()
+        d = DriverManager.get_current_driver()
 
         desc = "Driver should" + ", ".join(c.name for c in conds)
 
@@ -26,10 +25,10 @@ class DriverWait:
         def _on_timeout():
             return f"{desc}. url={getattr(d,'current_url',None)}, title={getattr(d,'title',None)}"
 
-        with step(desc):
+        with AllureReporter.step(desc):
             try:
                 self.waiter.until(_supplier, _on_timeout, lambda p: d.save_screenshot(p))
             except Exception as e:
-                attach_text("driver.url", getattr(d, "current_url", ""))
-                attach_text("driver.title", getattr(d, "title", ""))
+                AllureReporter.attach_text("driver.url", getattr(d, "current_url", ""))
+                AllureReporter.attach_text("driver.title", getattr(d, "title", ""))
                 raise

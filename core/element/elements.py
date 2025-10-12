@@ -3,28 +3,20 @@ from typing import Optional, List, Union
 from dataclasses import replace
 from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
 from selenium.webdriver.remote.webdriver import WebDriver, WebElement
+from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import JavascriptException
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 
 from core.element.locators import Locator
 from core.waiter.wait import Waiter
-from core.element.conditions import Condition, visible as cond_visible
-from core.reports.reporting import step, attach_text, attach_png
+from core.element.conditions import Condition, visible as cond_visible, click_ready
+from core.reports.reporting import AllureReporter
 
 try:
     import allure
 except Exception:
-    import contextlib
-
-
-    class _NoAllure:
-        def step(self, *_a, **_k): return contextlib.nullcontext()
-
-        def attach(self, *_a, **_k): pass
-
-
-    allure = _NoAllure()
+    allure = None
 
 from core.drivers.driver_manager import DriverManager
 from core.configs.config import Configuration
@@ -87,7 +79,14 @@ class Element:
     # ---------- core / action ---------------
     def click(self) -> "Element":
         self.should(cond_visible())
-        self._resolve().click()
+        we = self._resolve()
+        self.should(click_ready(), timeout_ms=max(200, self.config.polling_interval_ms))
+        try:
+            we.click()
+        except ElementClickInterceptedException:
+            self.should(click_ready(), timeout_ms=400)
+            self._resolve().click()
+            we.click()
         return self
 
     def type(self, text: str, clear: bool = True) -> "Element":
@@ -158,9 +157,10 @@ class Element:
 
         import time
         t0 = time.time()
+        el = self._resolve()
         last_top = None
         while time.time() < t0 - 0.5:
-            top = self._driver().execute_script("return arguments[0].getBoundingClientRect().top;", self._resolve())
+            top = self._driver().execute_script("return arguments[0].getBoundingClientRect().top;", el)
             if last_top is not None and abs(top - last_top) < 0.5:
                 break
             last_top = top
@@ -175,10 +175,21 @@ class Element:
         - If locator has parent -> resolve parent and find in CONTEXT parent
         - If not -> find from driver
         """
-        if self.parent:
-            parent_we = self.resolve_we(locator)
+        if getattr(locator, "parent", None):
+            parent_we = self.resolve_we(locator.parent)
             return parent_we.find_element(locator.by, locator.value)
         return self._driver().find_element(locator.by, locator.value)
+
+    def highlight(self, el: WebElement, style: str, duration_ms: int = 200):
+        try:
+            prev = self._driver().execute_script("return arguments[0].getAttribute('style')||'';", el) or ""
+            self._driver().execute_script("arguments[0].setAttribute('style', (arguments[1] ? arguments[1]+';' : '') "
+                                          "+ arguments[2]);",
+                                  el, prev, style)
+            time.sleep(max(0, duration_ms) / 1000.0)
+            self._driver().execute_script("arguments[0].setAttribute('style', arguments[1]);", el, prev)
+        except Exception:
+            pass
 
     # ---------- state getters ----------
     def text(self, mode: sttr = "visible") -> str:
@@ -193,11 +204,10 @@ class Element:
             if mode == "visible":
                 return (el.text or el.get_attribute("innerText") or "").strip()
             elif mode == "all":
-                return (el.get_attribute("textContext") or "").strip()
+                return (el.get_attribute("textContent") or "").strip()
             elif mode == "value":
                 return (el.get_property("value") or el.get_attribute("value") or "").strip()
             else:
-                # Default value same as VISIBLE
                 return (el.text or el.get_attribute("innerText") or "").strip()
         except Exception:
             return ""
@@ -244,7 +254,7 @@ class Element:
             except Exception:
                 return False
 
-        with step(desc):
+        with AllureReporter.step(desc):
             try:
                 self.waiter.until(_supplier, _on_timeout, _shot)
                 return self
@@ -252,8 +262,8 @@ class Element:
                 # Attach information about failure (screenshot, locator)
                 spath = getattr(e, "screenshot_path", None)
                 if spath:
-                    attach_png(f"FAILED - {self.name}", spath)
-                attach_text("Locator", str(self.locator))
+                    AllureReporter.attach_file(spath, f"FAILED - {self.name}", "image/png")
+                AllureReporter.attach_text("Locator", str(self.locator))
                 raise
             finally:
                 self.waiter.timeout_s = orig_timeout

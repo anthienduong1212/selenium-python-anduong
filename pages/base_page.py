@@ -11,7 +11,7 @@ class BasePage:
     """
 
     def __init__(self, config: Configuration | None = None):
-        self.config = config or Configuration()
+        self.config = config or DriverManager.get_current_config()
         self.driver = DriverManager.get_driver(self.config)
 
     def el(self, selector, name: str | None = None):
@@ -22,4 +22,5 @@ class BasePage:
 
     def open(self, url: str):
         self.driver.get(url)
+
 

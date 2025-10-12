@@ -1,8 +1,10 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from copy import deepcopy
-import json, os
+from importlib.resources import files
+from pathlib import Path
 from typing import Type, Dict, List, Optional, Any
+import json, os
 
 
 @dataclass
@@ -33,7 +35,7 @@ class Configuration:
     per_browser_remote_url: Dict[str, str] = field(default_factory=dict)
 
     @classmethod
-    def from_pytest_options(cls: Type["Configuration"], config) -> "Configuration":
+    def from_pytest_options(cls, config) -> "Configuration":
         """
         Create Configuration based on pytest command line parameters.
         Supports reading options: --browser, --headless, --remote-url (or --remote_url),
@@ -42,126 +44,84 @@ class Configuration:
         """
         cfg = cls()
 
-        def _to_int(v) -> Optional[int]:
-            try:
-                return int(v)
-            except (TypeError, ValueError):
-                return None
+        browser = config.getoption("browser", default=None)
+        if browser:
+            cfg.browser = browser
 
-        def _to_bool(v) -> Optional[bool]:
-            if isinstance(v, bool):
-                return v
-            if v is None:
-                return None
-            s = str(v).strip().lower()
-            if s in {"1", "true", "yes", "y", "on"}:
-                return True
-            if s in {"0", "false", "no", "n", "off"}:
-                return False
-            return None
+        if config.getoption("headless", default=False):
+            cfg.headless = True
 
-        b = config.getoption("--browser", default=None)
-        if b:
-            cfg.browser = str(b).lower()
-
-        # headless (True/False)
-        h = config.getoption("--headless", default=None)
-        hb = _to_bool(h)
-        if hb is not None:
-            cfg.headless = hb
-
-        # remote URL
-        remote = config.getoption("--remote-url", default=None) or config.getoption("--remote_url", default=None)
+        remote = config.getoption("remote_url", default=None)  # Dest of remote url
         if remote:
-            cfg.remote_url = str(remote)
+            cfg.remote_url = remote
 
-        wto = _to_int(config.getoption("--wait-timeout-ms", default=None))
-        if wto is not None:
-            cfg.wait_timeout_ms = wto
-
-        pti = _to_int(config.getoption("--polling-interval-ms", default=None))
-        if pti is not None:
-            cfg.polling_interval_ms = pti
-
-        plo = _to_int(config.getoption("--page-load-timeout-ms", default=None))
-        if plo is not None:
-            cfg.page_load_timeout_ms = plo
-
-        iwt = _to_int(config.getoption("--implicit-wait-ms", default=None))
-        if iwt is not None:
-            cfg.implicit_wait_ms = iwt
-
-        m = config.getoption("--maximize", default=None)
-        mb = _to_bool(m)
-        if mb is not None:
-            cfg.maximize = mb
-
-        # Nạp file JSON override nếu có
-        json_path = config.getoption("--browser-config", default=None)
-        if json_path:
-            cfg.load_browser_json(json_path)
-            try:
-                keys = list(cfg.browser_config_map.keys())
-                if not cfg.browser and len(keys) == 1:
-                    cfg.browser = keys[0].lower()
-            except Exception:
-                pass
+        cfg_json = config.getoption("browser_config", default=None)
+        if cfg_json:
+            cfg.load_browser_json(cfg_json)
 
         return cfg
 
     def load_browser_json(self, path: str) -> None:
         """
-        Reads a JSON file containing browser-specific configuration and loads it into the current config.
-        Supports overriding args, prefs, capabilities, vendor options and remote_url per‑browser.
+        Read JSON override per-browser. Support:
+            1) File Path on disk (relative/absolute)
+            2) Fallback: resource in package core. Configs
         """
+        p = Path(path)
+        if p.exists():
+            text = p.read_text(encoding="utf-8")
+        else:
+            try:
+                text = (files("core.configs").joinpath(p.name)).read_text(encoding="utf-8")
+            except Exception as e:
+                raise FileNotFoundError(f"Browser Configuration not found: {path}") from e
+
         try:
-            with open(path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-        except FileNotFoundError:
-            raise FileNotFoundError(f"Browser Configuration not found: {path}")
+            data = json.load(text)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON in {path}: {e}") from e
 
         self.browser_config_map = {}
         for name, conf in data.items():
+            # Parse data to map
             if not isinstance(conf, dict):
                 continue
             key = name.lower()
             self.browser_config_map[key] = conf
 
-            if isinstance(conf.get("args"), list):
-                self.extra_args[key] = conf["args"]
+            args = conf.get("args")
+            if isinstance(args, list):
+                self.extra_args = args
 
-            if isinstance(conf.get("prefs"), dict):
-                self.extra_prefs[key] = conf["prefs"]
+            prefs = conf.get("prefs")
+            if isinstance(prefs, dict):
+                self.extra_prefs = prefs
 
-            if isinstance(conf.get("capabilities"), dict):
-                self.extra_caps[key] = conf["capabilities"]
+            caps = conf.get("capabilities")
+            if isinstance(caps, dict):
+                self.extra_caps = caps
 
-            # vendor-specific capabilities: accept every key with semicolon
             vendor = {vk: conf[vk] for vk in conf if isinstance(vk, str) and ":" in vk}
             if vendor:
                 self.vendor_caps[key] = vendor
 
-            # Override configuration by selected Browser
-            b = (self.browser or "").lower()
+            if conf.get("remote_url"):
+                self.per_browser_remote_url[key] = str(conf["remote_url"])
 
-            if not b and len(self.browser_config_map == 1):
-                b = next(iter(self.browser_config_map))
-                self.browser = b
+            if conf.get("wait_timeout_ms") is not None:
+                self.wait_timeout_ms = int(conf["wait_timeout_ms"])
 
-            sel = self.browser_config_map.get(b, {})
-            mapping = {
-                "wait_timeout_ms": int,
-                "polling_interval_ms": int,
-                "page_load_timeout_ms": int,
-                "implicit_wait_ms": int,
-                "maximize": bool,
-                "headless": bool,
-                "remote_url": str,
-            }
+            if conf.get("polling_interval_ms") is not None:
+                self.polling_interval_ms = int(conf["polling_interval_ms"])
 
-            for k, caster in mapping.items():
-                if hasattr(self, k) and k in sel and sel[k] is not None:
-                    setattr(self, k, caster(sel[k]))
+            if conf.get("page_load_timeout_ms") is not None:
+                self.page_load_timeout_ms = int(conf["page_load_timeout_ms"])
+
+            if conf.get("implicit_wait_ms") is not None:
+                self.implicit_wait_ms = int(conf["implicit_wait_ms"])
+
+            if conf.get("maximize") is not None:
+                self.maximize = bool(conf["maximize"])
 
     def get_browser_cfg(self, browser_name: str) -> Dict[str, Any]:
         """Trả về block cấu hình theo tên browser (đã lower-case)."""

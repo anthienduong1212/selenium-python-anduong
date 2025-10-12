@@ -41,7 +41,6 @@ class DriverManager:
     _CTX_ID: ContextVar[int] = ContextVar("_ctx_id", default=0)
     _NEXT_CTX_ID = 1
 
-    _DEFAULT_BROWSER_JSON = os.getenv("BROWSER_CONFIG", "core/configs/config.json")
     _DEFAULT_PROVIDER_PACKGAGE = os.getenv("BROWSER_PROVIDER", "core.providers")
 
     # ______ public API _________
@@ -76,6 +75,14 @@ class DriverManager:
         with cls._LOCK:
             rec = cls._REGISTRY.get(key)
             return rec.driver if rec else None
+
+    @classmethod
+    def get_current_config(cls) -> Optional[Configuration]:
+        """Return current configuration in registry of context"""
+        key = cls._current_key()
+        with cls._LOCK:
+            rec = cls._REGISTRY.get(key)
+            return rec.config if rec else None
 
     @classmethod
     def quit_driver(cls) -> None:

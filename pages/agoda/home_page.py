@@ -2,7 +2,7 @@ from pages.base_page import BasePage
 from core.element.locators import Locator
 from selenium.webdriver.common.by import By
 from core.configs.config import Configuration
-from selenium.webdriver.support import expected_conditions as EC
+from core.utils.browser_utils import BrowserUtils
 from core.element.conditions import Condition, visible as cond_visible
 from core.utils.datetime_utils import get_current_date, parse_strict
 from pages.agoda.enums.occupancies import OccupancyType
@@ -112,7 +112,9 @@ class HomePage(BasePage):
             occupancy_control.should_be(cond_visible()).click()
 
     def click_search(self):
-        self.el(self.BTN_SEARCH).should_be(cond_visible()).click()
+        search_button = self.el(self.BTN_SEARCH).should_be(cond_visible())
+        BrowserUtils.click_open_and_switch(lambda: search_button.click())
+
 
 
 
