@@ -2,6 +2,7 @@
 
 from core.configs.config import Configuration
 
+
 def test_config_merged_from_json_and_cli(pytestconfig):
     cfg = Configuration.from_pytest_options(pytestconfig)
 

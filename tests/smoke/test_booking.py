@@ -19,6 +19,8 @@ def test_homepage(driver):
     home_page.click_search()
 
     result_page.verify_top_n_hotels_are_in_city(5, "Dalat")
+    result_page.search_filter_with_term("RoomOffers", "Breakfast included")
 
+    result_page.select_first_hotel()
 
 
