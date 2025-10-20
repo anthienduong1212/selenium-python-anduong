@@ -17,10 +17,10 @@ class TimeoutErrorWithScreenShot(AssertionError):
 
 
 class Waiter:
-    def __init__(self, timeout_s: float,
-                 poll_s: float,
+    def __init__(self, timeout_s: float = 4.0,
+                 poll_s: float = 0.2,
                  screen_dir: str = "reports/screenshots",
-                 _clock: Callable[[], float] = time.monotonic()):
+                 _clock: Callable[[], float] = time.monotonic):
         self.timeout_s = timeout_s
         self.poll_s = poll_s
         self.screen_dir = screen_dir

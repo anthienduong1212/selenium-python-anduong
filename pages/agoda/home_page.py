@@ -1,7 +1,5 @@
 from pages.base_page import BasePage
 from core.element.locators import Locator
-from selenium.webdriver.common.by import By
-from core.configs.config import Configuration
 from core.utils.browser_utils import BrowserUtils
 from core.element.conditions import Condition, visible as cond_visible
 from core.utils.datetime_utils import get_current_date, parse_strict
@@ -9,27 +7,34 @@ from pages.agoda.enums.occupancies import OccupancyType
 
 
 class HomePage(BasePage):
-    def __init__(self, config: Configuration):
+    def __init__(self):
         super().__init__()
-        self.config = config
+
     # Search box and auto suggest
-    TXT_AUTOCOMPLETE_INPUT = Locator.xpath('//div[@id="autocomplete-box"]//input', desc="Search box")
-    OPT_AUTOSUGGEST_ITEM = Locator.xpath('//li[@data-selenium="autosuggest-item" and @data-text={city}]', desc="Auto suggest")
+    TXT_AUTOCOMPLETE_INPUT = Locator.xpath('//div[@id="autocomplete-box"]//input', desc="HOME_PAGE Search box")
+    OPT_AUTOSUGGEST_ITEM = Locator.xpath('//li[@data-selenium="autosuggest-item" and @data-text={city}]',
+                                         desc="HOME_PAGE Auto suggest")
 
     # Date Picker
-    CALD_DATEPICKER_DATE = Locator.xpath('//div[@id="DatePicker__AccessibleV2"]//span[@data-selenium-date={date}]', desc="Date Picker")
-    CALD_DATEPICKER_NEXT = Locator.xpath("//div[@id='DatePicker__AccessibleV2']//button[@data-selenium='calendar-next-month-button']",
-        desc="Next Month")
-    CALD_DATEPICKER_CURRENT_MONTH = Locator.xpath('//div[@id="DatePicker__AccessibleV2"]//div[contains(@class,"DayPicker-Months")]/div',
-        desc="Current Month")
+    CALD_DATEPICKER = '//div[@id="DatePicker__AccessibleV2"]'
+    CALD_DATEPICKER_DATE = Locator.xpath('//span[@data-selenium-date={date}]', desc="HOME_PAGE Date Picker")
+    CALD_DATEPICKER_NEXT = Locator.xpath("//button[@data-selenium='calendar-next-month-button']",
+        desc="HOME_PAGE Next Month Button")
+    CALD_DATEPICKER_MONTH_LABELS = Locator.xpath('//div[contains(@class,"DayPicker-Months")]/div',
+        desc="HOME_PAGE Month Label")
+
+    CALD_DATEPICKER_CURRENT_MONTH = '//div[contains(@class,"DayPicker-Caption")]'
 
     # Occupancy Selector and it controls
-    BTN_OCCUPANCY_SELECTOR = Locator.xpath("//div[@id='occupancy-selector']//div[@data-selenium={occupancyType}]", desc="Occupancy Selector")
-    BTN_QUANTITY_CONTROL = Locator.xpath(".//button[@data-selenium={control}]", desc="Increase/Decrease")
-    BTN_QUANTITY_NUMBER = Locator.xpath(".//div[contains(@data-selenium,'desktop-occ')]")
+    BTN_OCCUPANCY_SELECTOR = Locator.xpath("//div[@id='occupancy-selector']//div[@data-selenium={occupancyType}]"
+                                           , desc="HOME_PAGE Occupancy Selector")
+    BTN_QUANTITY_CONTROL = Locator.xpath(".//button[@data-selenium={control}]", desc="HOME_PAGE Increase/Decrease")
+    BTN_QUANTITY_NUMBER = Locator.xpath(".//div[contains(@data-selenium,'desktop-occ')]", desc="HOME_PAGE Current "
+                                                                                               "Quantity")
 
     # Search button
-    BTN_SEARCH = Locator.xpath("//div[@id='Tabs-Container']//button[@data-selenium='searchButton']")
+    BTN_SEARCH = Locator.xpath("//div[@id='Tabs-Container']//button[@data-selenium='searchButton']"
+                               , "HOME_PAGE Search Button")
 
     def enter_text_in_autocomplete(self, text: str):
         """Fill text to search text box"""
@@ -47,14 +52,17 @@ class HomePage(BasePage):
         """Select date on calendar"""
         dt_target_date = parse_strict(date, "%Y-%m-%d")
 
-        # get_current_month(1) select the second month title on Calendar
-        dt_current_month = parse_strict(self.get_current_month(1), "%B %Y")
+        # get_month_label_th(2) select the second month title on Calendar
+        dt_current_month = parse_strict(self.get_month_label_th(2), "%B %Y")
+
+        # Date picker parent
+        parent = self.el(self.CALD_DATEPICKER).should_be(cond_visible())
 
         # Date picker element
-        date_picker = self.el(self.CALD_DATEPICKER_DATE(date=date)).should_be(cond_visible())
+        date_picker = parent.find(self.CALD_DATEPICKER_DATE(date=date))
 
         # Next month button
-        next_month_button = self.el(self.CALD_DATEPICKER_NEXT)
+        next_month_button = parent.find(self.CALD_DATEPICKER_NEXT)
 
         # Define how many times should we click on next button
         delta = self.month_index(dt_current_month) - self.month_index(dt_target_date)
@@ -74,10 +82,14 @@ class HomePage(BasePage):
         # Select check-out date
         self.select_date(checkout_date)
 
-    def get_current_month(self, order_month: int = 0) -> str:
+    def get_month_label_th(self, order_month: int = 0) -> str:
         """Get the month title display on Calendar"""
-        calendar = self.els(self.CALD_DATEPICKER_CURRENT_MONTH).should_have_size(2).get(order_month).should(cond_visible())
-        current_month = (calendar.find(Locator.xpath('.//div[contains(@class,"DayPicker-Caption")]'))
+        parent = self.el(self.CALD_DATEPICKER)
+
+        calendar = (parent.all(self.CALD_DATEPICKER_MONTH_LABELS).should_have_size(2).get(order_month - 1)
+                    .should(cond_visible()))
+
+        current_month = (calendar.find(self.CALD_DATEPICKER_CURRENT_MONTH)
                          .should(cond_visible()))
         return current_month.text()
 

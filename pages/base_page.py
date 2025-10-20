@@ -10,8 +10,8 @@ class BasePage:
     Use Element / Elements with current config.
     """
 
-    def __init__(self, config: Configuration | None = None):
-        self.config = config or DriverManager.get_current_config()
+    def __init__(self):
+        self.config = DriverManager.get_current_config()
         self.driver = DriverManager.get_driver(self.config)
 
     def el(self, selector, name: str | None = None):
