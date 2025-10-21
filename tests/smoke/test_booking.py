@@ -1,7 +1,6 @@
 from pages.agoda.home_page import HomePage
 from pages.agoda.result_page import ResultPage
 from pages.agoda.hotel_details import HotelDetails
-from pages.page_factory import PageFactory
 from pages.agoda.enums.occupancies import OccupancyType
 from pages.agoda.enums.detailed_navbar_options import NavbarOptions
 

@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 import threading
 import atexit
 import os
@@ -10,6 +9,7 @@ from typing import Optional, Dict, Tuple, Any, Callable
 from selenium.webdriver.remote.webdriver import WebDriver
 from core.configs.config import Configuration
 from core.drivers.driver_factory import DriverFactory
+from core.reports.reporting import AllureReporter
 
 try:
     import allure
@@ -41,7 +41,7 @@ class DriverManager:
     _CTX_ID: ContextVar[int] = ContextVar("_ctx_id", default=0)
     _NEXT_CTX_ID = 1
 
-    _DEFAULT_PROVIDER_PACKGAGE = os.getenv("BROWSER_PROVIDER", "core.providers")
+    _DEFAULT_PROVIDER_PACKAGE = os.getenv("BROWSER_PROVIDER", "core.providers")
 
     # ______ public API _________
     @classmethod
@@ -108,7 +108,7 @@ class DriverManager:
         :param cfg:
         :return WebDriver:
         """
-        factory = DriverFactory(provider_package=cls._DEFAULT_PROVIDER_PACKGAGE)
+        factory = DriverFactory(provider_package=cls._DEFAULT_PROVIDER_PACKAGE)
         driver = factory.create_driver(cfg)
         return driver
 
@@ -130,9 +130,9 @@ class DriverManager:
     @classmethod
     def new_context(cls) -> int:
         """Create new context id; using when need to have more than 1 driver in a thread."""
-        new_id = getattr(cls._CTX_ID, "next", 1)
-        cls._CTX_ID.value = new_id
-        cls._CTX_ID.next = new_id + 1
+        new_id = cls._NEXT_CTX_ID
+        cls._NEXT_CTX_ID += 1
+        cls._CTX_ID.set(new_id)  # ContextVar.set(...)
         return new_id
 
     @classmethod
@@ -156,23 +156,18 @@ class DriverManager:
     def _safe_quit(cls, driver: WebDriver) -> None:
         """Safe quit + attach Allure if possible"""
         try:
-            if allure:
-                try:
-                    png = driver.get_screenshot_as_png()
-                    allure.attach(png, name="Final Screenshot", attachment_type=allure.attachment_type.PNG)
-                except Exception:
-                    pass
-            driver.quit()
+            AllureReporter.attach_page_screenshot(driver, name="Final Screenshot")
         except Exception:
             # swallow quit error so as not to ruin teardown
             pass
+        driver.quit()
 
     @classmethod
     def _post_create_setup(cls, driver: WebDriver, cfg: Configuration) -> None:
         """Setup after create WebDriver: timeout, windows size, implicit wait"""
-        implicit_ms = getattr(cfg, "implicit_wait_ms", 0)
-        if implicit_ms and hasattr(driver, "implicit_wait"):
-            driver.implicit_wait(max(0.0, implicit_ms / 1000.0))
+        implicit_ms = int(getattr(cfg, "implicit_wait_ms", 0) or 0)
+        if implicit_ms > 0:
+            driver.implicit_wait(implicit_ms / 1000.0)
 
         try:
             if getattr(cfg, "maximize", False):

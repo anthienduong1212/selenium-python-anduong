@@ -1,10 +1,8 @@
 from __future__ import annotations
-
 from typing import Optional, Type
 from selenium.webdriver.remote.webdriver import WebDriver
-
 from core.configs.config import Configuration
-from core.providers.base_provider import BrowserProvider
+from core.providers.browser_provider import BrowserProvider
 from core.providers.registry import discover_and_register, get_provider_class
 
 
@@ -17,6 +15,7 @@ class DriverFactory:
 
     def __init__(self, provider_package: str = "core.providers"):
         discover_and_register(provider_package)
+
 
     def create_driver(self, config: Configuration) -> WebDriver:
         """

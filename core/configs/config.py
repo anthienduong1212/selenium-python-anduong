@@ -124,7 +124,7 @@ class Configuration:
                 self.maximize = bool(conf["maximize"])
 
     def get_browser_cfg(self, browser_name: str) -> Dict[str, Any]:
-        """Trả về block cấu hình theo tên browser (đã lower-case)."""
+        """Return block of configuration from json by browser name (lowered-case)."""
         return self.browser_config_map.get(browser_name.lower(), {})
 
     def clone(self, **overrides) -> "Configuration":

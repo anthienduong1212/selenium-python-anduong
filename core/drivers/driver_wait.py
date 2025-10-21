@@ -23,7 +23,17 @@ class DriverWait:
             return all(c.predicate(d) for c in conds)
 
         def _on_timeout():
-            return f"{desc}. url={getattr(d,'current_url',None)}, title={getattr(d,'title',None)}"
+            # Find the first 'fail' condition for easier debug
+            first_fail = None
+            for c in conds:
+                try:
+                    if not c.predicate(d):
+                        first_fail = c.name
+                        break
+                except Exception as e:
+                    first_fail = f"{c.name} raise {type(e).__name__}: {e}"
+            extra = f", first_failed={first_fail}" if first_fail else ""
+            return f"{desc}{extra}. url={getattr(d, 'current_url',None)}, title={getattr(d, 'title', None)}"
 
         with AllureReporter.step(desc):
             try:
@@ -31,4 +41,8 @@ class DriverWait:
             except Exception as e:
                 AllureReporter.attach_text("driver.url", getattr(d, "current_url", ""))
                 AllureReporter.attach_text("driver.title", getattr(d, "title", ""))
+                try:
+                    AllureReporter.attach_page_screenshot(d, name="DriverWait Timeout")
+                except Exception:
+                    pass
                 raise

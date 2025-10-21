@@ -1,6 +1,6 @@
 from typing import Dict, Type
 
-from core.providers.base_provider import BrowserProvider
+from core.providers.browser_provider import BrowserProvider
 
 _PROVIDER_REGISTRY: Dict[str, Type[BrowserProvider]] = {}
 

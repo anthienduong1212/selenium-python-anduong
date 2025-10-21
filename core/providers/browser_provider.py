@@ -15,16 +15,10 @@ class BrowserProvider(ABC):
 
     def __init__(self, config: Configuration):
         self.config = config
-        self.browser_cfg = config.get_browser_cfg(self.name)
 
     @abstractmethod
     def build_options(self) -> Any:
         """Return browser-specific Options instance (ChromeOptions/FirefoxOptions/EdgeOptions)."""
-        raise NotImplementedError
-
-    @abstractmethod
-    def build_service(self) -> Optional[Any]:
-        """Return Service instance or None (if using Selenium Manager or remote)."""
         raise NotImplementedError
 
     def apply_common_settings(self, options: Any):
@@ -86,8 +80,7 @@ class BrowserProvider(ABC):
         if remote_url:
             return self.create_remote_driver(options, remote_url)
 
-        service = self.build_service()
-        return self.create_local_driver(options, service)
+        return self.create_local_driver(options)
 
     def apply_vendor_overrides(self, options: Any):
         pass
@@ -98,7 +91,7 @@ class BrowserProvider(ABC):
             options.set_capability(k, v)
 
     @abstractmethod
-    def create_local_driver(self, options: Any, service: Optional[Any]) -> WebDriver:
+    def create_local_driver(self, options: Any) -> WebDriver:
         """Instantiate a local WebDriver using options and service."""
         raise NotImplementedError
 

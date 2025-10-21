@@ -4,8 +4,9 @@ from typing import Any, Optional, Dict
 from selenium import webdriver
 from selenium.webdriver.firefox.service import Service as FirefoxService
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
+from selenium.webdriver.remote.webdriver import WebDriver
 from webdriver_manager.firefox import GeckoDriverManager
-from core.providers.base_provider import BrowserProvider
+from core.providers.browser_provider import BrowserProvider
 from core.providers.registry import register_provider
 
 
@@ -17,9 +18,6 @@ class FirefoxProvider(BrowserProvider, ABC):
     def build_options(self) -> Any:
         opts = FirefoxOptions()
         return opts
-
-    def build_service(self) -> Optional[Any]:
-        return FirefoxService(GeckoDriverManager().install())
 
     def _add_headless(self, options: Any):
         options.add_argument("--headless")
@@ -49,5 +47,5 @@ class FirefoxProvider(BrowserProvider, ABC):
         except Exception:
             pass
 
-    def create_local_driver(self, options, service):
-        return webdriver.Firefox(service=service, options=options)
+    def create_local_driver(self, options: Any) -> WebDriver:
+        return webdriver.Firefox(options)

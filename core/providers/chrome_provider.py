@@ -6,7 +6,7 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.remote.webdriver import WebDriver
 from webdriver_manager.chrome import ChromeDriverManager
-from core.providers.base_provider import BrowserProvider
+from core.providers.browser_provider import BrowserProvider
 from core.providers.registry import register_provider
 
 
@@ -18,9 +18,6 @@ class ChromeProvider(BrowserProvider, ABC):
     def build_options(self):
         opts = ChromeOptions()
         return opts
-
-    def build_service(self) -> Optional[ChromeService]:
-        return ChromeService(ChromeDriverManager().install())
 
     def _add_headless(self, options):
         options.add_argument("--headless=new")
@@ -39,5 +36,5 @@ class ChromeProvider(BrowserProvider, ABC):
             if "prefs" in gco:
                 options.add_experimental_option("prefs", gco["prefs"])
 
-    def create_local_driver(self, options: Any, service: Optional[Any]) -> WebDriver:
-        return webdriver.Chrome(options=options, service=service)
+    def create_local_driver(self, options: Any) -> WebDriver:
+        return webdriver.Chrome(options)
