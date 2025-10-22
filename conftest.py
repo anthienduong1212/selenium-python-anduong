@@ -1,3 +1,5 @@
+import re
+
 import pytest
 import json
 import os
@@ -6,6 +8,7 @@ from pathlib import Path
 from core.configs.config import Configuration
 from core.drivers.driver_manager import DriverManager
 from core.reports.reporting import AllureReporter
+from pytest import Config
 
 
 def pytest_addoption(parser):
@@ -31,7 +34,13 @@ def pytest_addoption(parser):
                     help="Selenium Grid URL, e.g. http://127.0.0.1:4444/wd/hub")
 
     group.addoption("--browser-config", dest="browser_config", action="store", default=None,
-                    help="Path to browsers.json (optional)")
+                    help="Path to config.json (optional)")
+
+    group.addoption("--parallel-mode", dest="parallel_mode",
+                    choices=["per-test", "per-worker", "none"],
+                    default="per-test",
+                    help="Parallel: per-test (each test will be ran on each browser), "
+                         "per-worker (each worker uses 1 browser)")
 
 
 def _detect_browser_from_json(path: str) -> list[str]:
@@ -39,7 +48,7 @@ def _detect_browser_from_json(path: str) -> list[str]:
     if not p or not p.exists():
         return []
 
-    data = json.load(p.read_text(encoding="utf-8"))
+    data = json.loads(p.read_text(encoding="utf-8"))
 
     # if browsers is not exist in data, get() will create it assign the whole data to it
     browsers = data.get("browsers", data)
@@ -48,30 +57,63 @@ def _detect_browser_from_json(path: str) -> list[str]:
     return sorted(browsers.keys())
 
 
+def _resolve_browser_from_json(config: Config) -> list[str]:
+    multi = config.getoption("browsers")
+    single = config.getoption("browser")
+
+    if multi and "auto" in multi:
+        cfg_json = config.getoption("browser_config")
+        auto_list = _detect_browser_from_json(cfg_json)
+        return auto_list or ([single] if single else ["chrome"])
+
+    if multi:
+        return multi
+
+    return [single] if single else ["chrome"]
+
+
 def pytest_generate_tests(metafunc):
     if "browser_name" not in metafunc.fixturenames:
         return
 
-    multi = metafunc.config.getoption("browsers")
-    single = metafunc.config.getoption("browser")
+    mode = metafunc.config.getoption("parallel_mode")
+    if mode != "per-test":
+        # per-test/none: DON'T parameterize here
+        return
 
-    if multi and "auto" in multi:
-        cfg_json = metafunc.config.getoption("browser_config")
-        auto_list = _detect_browser_from_json(cfg_json)
-        # Fallback: if null, using single or chrome
-        params = auto_list or ([single] if single else ["chrome"])
-    elif multi:
-        params = multi
+    browsers = _resolve_browser_from_json(metafunc.config)
+
+    # Assign mark xdist_group by browser name to gather by worker when using --dist=loadgroup
+    # If b is browser name in list, mark this test name = browser
+
+    params = [
+        pytest.param(b, marks=pytest.mark.xdist_group(name=b))
+        for b in browsers
+    ]
+
+    metafunc.parametrize("browser_name", params, ids=[f"browser={b}" for b in browsers])
+
+
+@pytest.fixture(scope="session")
+def browser_name(request, worker_id):
+    mode = request.config.getoption("parallel_mode")
+    if mode == "per-test":
+        # return value from parameterize
+        return request.param
+
+    # if mode is "per-worker" or none
+    browsers = _resolve_browser_from_json(request.config)
+    if mode == "per-worker":
+        m = re.search(r"\d+", worker_id or "")
+        idx = int (m.group()) if m else 0
+        return browsers[idx % len(browsers)]
     else:
-        params = [single] if single else ["chrome"]
-
-    metafunc.parametrize("browser_name", params, ids=params)
-
+        return browsers[0]
 
 @pytest.fixture(scope="function")
 def driver(request, browser_name) -> object:
     """
-    Fixture initializes and returns a driver for each test. Automatically calls DriverManager.quit_driver() when finished.
+    Fixture initializes and returns a driver for each test. Automatically calls DriverManager.quit_driver() when finished
     :param request:
     :param browser_name: automatically provided by the pytest_generate_tests hook
     """
