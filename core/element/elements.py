@@ -1,10 +1,15 @@
 from __future__ import annotations
+import time
 from typing import Optional, List, Union
 from dataclasses import replace
-from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
+from selenium.common.exceptions import (
+    NoSuchElementException,
+    StaleElementReferenceException,
+    ElementClickInterceptedException,
+    JavascriptException
+)
+
 from selenium.webdriver.remote.webdriver import WebDriver, WebElement
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.common.exceptions import JavascriptException
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 
@@ -29,32 +34,51 @@ def _resolve_selector(selector: Union[str, tuple, Locator]) -> Locator:
 
 class Element:
     """
-   Selenide-like Element:
-     - lazy locating (chỉ find khi cần)
-     - auto-wait với .should(...)
+     - lazy locating (find if need)
+     - auto-wait with .should(...)
      - fluent API: .click().type("...").should(be_visible())
      - context-find: parent.find("child")
    """
 
-    def __init__(self, selector, config=None, context=None, name=None):
+    def __init__(self, selector,
+                 config: Optional[Configuration] = None,
+                 context: Optional["Element"] = None
+                 , name: [Optional] = None):
+
         self.locator: Locator = _resolve_selector(selector)
-        self.config = config or Configuration()
-        self.context = context
+        self.config: Configuration = config or DriverManager.get_current_config()
+        self.context: Optional["Element"] = context
         self.name = name or str(self.locator)
         self._last_ref: Optional[WebElement] = None
 
-        self.waiter = Waiter(timeout_s=self.config.wait_timeout_ms / 1000.0,
-                             poll_s=self.config.polling_interval_ms / 1000.0, )
+        self.waiter = Waiter(
+            timeout_s=max(0.001, self.config.wait_timeout_ms / 1000.0),
+            poll_s=max(0.001, self.config.polling_interval_ms / 1000.0),
+        )
+
+    # ================================
+    #          DRIVER/LOCATING
+    # ================================
 
     def _driver(self) -> WebDriver:
         return DriverManager.get_driver(self.config)
 
+    def resolve_we(self, locator) -> WebElement:
+        """
+        Context-aware resolve:
+        - If locator has parent -> resolve parent and find in CONTEXT parent
+        - If not -> find from driver
+        """
+        if getattr(locator, "parent", None):
+            parent_we = self.resolve_we(locator.parent)
+            return parent_we.find_element(locator.by, locator.value)
+        return self._driver().find_element(locator.by, locator.value)
+
     def _find_now(self) -> WebElement:
         loc = self.locator
         # If Element has context but locator doesn't have parent -> graft parent from context
-        if getattr(self, "context", None) and not getattr(loc, "parent", None):
+        if self.context and not getattr(loc, "parent", None):
             loc = replace(loc, parent=self.context.locator)
-
         return self.resolve_we(loc)
 
     def _resolve(self):
@@ -66,9 +90,11 @@ class Element:
                 self._last_ref = None
         self._last_ref = self._find_now()
 
-        if getattr(self.config, "auto_scroll", True):
-            self.scroll_into_view()
         return self._last_ref
+
+    # ================================
+    #          COMPOSITION
+    # ================================
 
     def find(self, selector: Union[str, tuple, Locator], name: Optional[str] = None) -> "Element":
         return Element(selector, config=self.config, context=self, name=name)
@@ -76,21 +102,83 @@ class Element:
     def all(self, selector: Union[str, tuple, Locator], name: Optional[str] = None) -> "Elements":
         return Elements(selector, config=self.config, context=self, name=name)
 
-    # ---------- core / action ---------------
+    # ================================
+    #          SCROLLING
+    # ================================
+
+    def is_in_viewport(self) -> bool:
+        try:
+            return self._driver().execute_script(
+                """
+                    const r = arguments[0].getBoundingClientRect();
+                    const vh = window.innerHeight || document.documentElement.clientHeight;
+                    const vw = window.innerWidth  || document.documentElement.clientWidth;
+                    return r.top >= 0 && r.left >= 0 && r.bottom <= vh && r.right <= vw;
+                    """,
+                self._resolve()
+            )
+        except JavascriptException:
+            return True
+        except Exception:
+            return False
+
+    def scroll_into_view(self):
+        el = self._resolve()
+        if self.is_in_viewport():
+            return
+
+        backend = getattr(self.config, "scroll_backend", "js")
+        block = getattr(self.config, "scroll_block", "center")
+        header_offset = getattr(self.config, "header_offset_px", 0)
+
+        try:
+            if backend == "wheel":
+                ActionChains(self._driver()).scroll_to_element(el).perform()  # Selenium 4 wheel
+            elif backend == "move":
+                ActionChains(self._driver()).move_to_element(el).perform()
+            else:
+                self._driver().execute_script(
+                    "arguments[0].scrollIntoView({block: arguments[1], inline: 'nearest'});",
+                    el, block
+                )
+            if header_offset:
+                self._driver().execute_script("window.scrollBy(0, -arguments[0]);", header_offset)
+        except Exception:
+            try:
+                ActionChains(self._driver()).move_to_element(el).perform()
+            except Exception:
+                pass
+
+        # Avoid jitter
+        t0 = time.time()
+        last_top = None
+        while time.time() < t0 + 0.5:
+            try:
+                top = self._driver().execute_script("return arguments[0].getBoundingClientRect().top;", el)
+            except Exception:
+                break
+            if last_top is not None and abs(top - last_top) < 0.5:
+                break
+            last_top = top
+            time.sleep(0.05)
+
+    # ================================
+    #          ACTIONS
+    # ================================
+
     def click(self) -> "Element":
         self.should(cond_visible())
-        we = self._resolve()
-        self.should(click_ready(), timeout_ms=max(200, self.config.polling_interval_ms))
+        self.scroll_into_view()
         try:
-            we.click()
-        except ElementClickInterceptedException:
-            self.should(click_ready(), timeout_ms=400)
             self._resolve().click()
-            we.click()
+        except ElementClickInterceptedException:
+            self.should(click_ready(), timeout_ms=max(500, self.config.polling_interval_ms * 4))
+            self._resolve().click()
         return self
 
     def type(self, text: str, clear: bool = True) -> "Element":
         self.should(cond_visible())
+        self.scroll_into_view()
         el = self._resolve()
         if clear:
             try:
@@ -110,89 +198,15 @@ class Element:
 
     def hover(self) -> "Element":
         self.should(cond_visible())
+        self.scroll_into_view()
         ActionChains(self._driver()).move_to_element(self._resolve()).perform()
         return self
 
-    def is_in_viewport(self) -> bool:
-        return self._driver().execute_script("""
-        const r = arguments[0].getBoundingClientRect();
-        const vh = window.innerHeight || document.documentElement.clientHeight;
-        const vw = window.innerWidth  || document.documentElement.clientWidth;
-        return r.top >= 0 && r.left >= 0 && r.bottom <= vh && r.right <= vw;
-    """, self._resolve())
+    # ================================
+    #          STATE GETTERS
+    # ================================
 
-    def scroll_js(self):
-        self._driver().execute_script("""
-        const el = arguments[0], block = arguments[1], offset = arguments[2]||0;
-        el.scrollIntoView({block: block, inline: 'nearest'});
-        if (offset) window.scrollBy(0, -offset);
-    """, self._resolve(), self.config.scroll_block, self.config.header_offset_px)
-
-    def scroll_wheel(self):
-        ActionChains(self._driver()).scroll_to_element(self._resolve()).perform()
-
-    def scroll_move(self):
-        ActionChains(self._driver()).move_to_element(self._resolve()).perform()
-
-    def scroll_into_view(self):
-        try:
-            if self.is_in_viewport():
-                return
-        except JavascriptException:
-            pass
-
-        backend = self.config.scroll_backend
-
-        try:
-            if backend == "js":
-                self.scroll_js()
-            elif backend == "wheel":
-                self.scroll_wheel()
-            elif backend == "move":
-                self.scroll_move()
-            else:
-                self.scroll_js()
-        except Exception:
-            self.scroll_move()
-
-        import time
-        t0 = time.time()
-        el = self._resolve()
-        last_top = None
-        while time.time() < t0 - 0.5:
-            top = self._driver().execute_script("return arguments[0].getBoundingClientRect().top;", el)
-            if last_top is not None and abs(top - last_top) < 0.5:
-                break
-            last_top = top
-            time.sleep(0.05)
-
-        if not self.is_in_viewport() and self.config.header_offset_px:
-            self._driver().execute_script("window.scrollBy(0, -arguments[0]);", self.config.header_offset_px)
-
-    def resolve_we(self, locator) -> WebElement:
-        """
-        Context-aware resolve:
-        - If locator has parent -> resolve parent and find in CONTEXT parent
-        - If not -> find from driver
-        """
-        if getattr(locator, "parent", None):
-            parent_we = self.resolve_we(locator.parent)
-            return parent_we.find_element(locator.by, locator.value)
-        return self._driver().find_element(locator.by, locator.value)
-
-    def highlight(self, el: WebElement, style: str, duration_ms: int = 200):
-        try:
-            prev = self._driver().execute_script("return arguments[0].getAttribute('style')||'';", el) or ""
-            self._driver().execute_script("arguments[0].setAttribute('style', (arguments[1] ? arguments[1]+';' : '') "
-                                          "+ arguments[2]);",
-                                  el, prev, style)
-            time.sleep(max(0, duration_ms) / 1000.0)
-            self._driver().execute_script("arguments[0].setAttribute('style', arguments[1]);", el, prev)
-        except Exception:
-            pass
-
-    # ---------- state getters ----------
-    def text(self, mode: sttr = "visible") -> str:
+    def text(self, mode: str = "visible") -> str:
         """
         :param mode:
             - "visible": same as user see; prior .text, fallback innerText
@@ -213,16 +227,50 @@ class Element:
             return ""
 
     def attr(self, name: str) -> Optional[str]:
-        return self._resolve().get_attribute(name)
+        try:
+            return self._resolve().get_attribute(name)
+        except Exception:
+            return None
 
     def css(self, name: str) -> Optional[str]:
-        return self._resolve().value_of_css_property(name)
+        try:
+            return self._resolve().value_of_css_property(name)
+        except Exception:
+            return None
 
-    # ---------- waiting / assertions ----------
+    # ================================
+    #          ELEMENT UTILS
+    # ================================
+
+    def highlight(self, el: WebElement, style: str, duration_ms: int = 200) -> None:
+        try:
+            prev = self._driver().execute_script("return arguments[0].getAttribute('style')||'';", el) or ""
+            self._driver().execute_script(
+                "arguments[0].setAttribute('style', (arguments[1] ? arguments[1]+';' : '') + arguments[2]);",
+                el, prev, style
+            )
+            time.sleep(max(0, duration_ms) / 1000.0)
+            self._driver().execute_script("arguments[0].setAttribute('style', arguments[1]);", el, prev)
+        except Exception:
+            pass
+
+    def exists(self) -> bool:
+        try:
+            if self.context:
+                p = self.context._resolve()
+                return len(p.find_elements(self.locator.by, self.locator.value)) > 0
+            return len(self._driver().find_elements(self.locator.by, self.locator.value)) > 0
+        except Exception:
+            return False
+
+    # ================================
+    #      Waiting / Assertions
+    # ================================
 
     def should(self, *conditions: Condition, timeout_ms: Optional[int] = None) -> "Element":
         if not conditions:
             return self
+
         orig_timeout = self.waiter.timeout_s
         if timeout_ms is not None:
             self.waiter.timeout_s = max(0.001, timeout_ms / 1000.0)
@@ -236,8 +284,11 @@ class Element:
                 # If element is not found or stale, continue waiting
                 return False
 
-            # Verify all conditions on found element
-            return all(c.test(el) for c in conditions)
+            try:
+                # Verify all conditions on found element
+                return all(c.test(el) for c in conditions)
+            except StaleElementReferenceException:
+                return False
 
         def _on_timeout() -> str:
             # On time out, record the last state (or not found issue)
@@ -274,28 +325,18 @@ class Element:
     def should_have(self, *conditions: Condition, timeout_ms: Optional[int] = None) -> "Element":
         return self.should(*conditions, timeout_ms=timeout_ms)
 
-    # ------------ with ---------------
+    # ================================
+    #              WITH
+    # ================================
     def _with(self, **overrides) -> "Element":
         """
             Create a copy of Element with config override
         """
-        new_cfg = self.config
-        for k, v in overrides.items():
-            if hasattr(new_cfg, k):
-                setattr(new_cfg, k, v)
+        new_cfg = self.config.clone(**overrides)
         return Element(self.locator, config=new_cfg, context=self.context, name=self.name)
 
     def as_(self, name: str) -> "Element":
         return Element(self.locator.with_decs(name), config=self.config, context=self.context, name=name)
-
-    def exists(self) -> bool:
-        try:
-            self._resolve()
-            return True
-        except NoSuchElementException:
-            return False
-        except StaleElementReferenceException:
-            return False
 
 
 class Elements:
@@ -307,13 +348,12 @@ class Elements:
     def __init__(self, selector: Union[str, tuple, Locator], config: Optional[Configuration] = None,
                  context: Element | None = None, name: Optional[str] = None):
         self.locator = _resolve_selector(selector)
-        self.config = config or Configuration()
+        self.config: Configuration = config or DriverManager.get_current_config()
         self.context = context
         self.name = name or str(self.locator)
-
         self.waiter = Waiter(
-            timeout_s=self.config.wait_timeout_ms / 1000.0,
-            poll_s=self.config.polling_interval_ms / 1000.0,
+            timeout_s=max(0.001, self.config.wait_timeout_ms / 1000.0),
+            poll_s=max(0.001, self.config.polling_interval_ms / 1000.0),
         )
 
     def _driver(self) -> WebDriver:
@@ -332,19 +372,28 @@ class Elements:
         # child element resolved by index lazily
         # using XPath index to avoid stale when ref list changed (best-effort)
         if self.locator.by.lower() == "xpath":
-            x = f"{self.locator.value}[{index + 1}]"
+            x = f"({self.locator.value})[{index + 1}]"
             return Element(("xpath", x),
                            config=self.config,
                            context=self.context,
                            name=f"{self.name}[{index}]")
-
         return IndexedElement(self, index, name=f"{self.name}[{index}]")
 
     def size(self) -> int:
-        return len(self._resolve())
+        try:
+            return len(self._resolve())
+        except Exception:
+            return 0
 
     def texts(self) -> List[str]:
-        return [el.text or "" for el in self._resolve()]
+        values: List[str] = []
+        for el in self._resolve():
+            try:
+                values.append((el.text or "").strip())
+            except StaleElementReferenceException:
+                # Applying best-effort will ignore stale element
+                continue
+        return values
 
     def should_have_size(self, n: int, timeout_ms: Optional[int] = None) -> "Elements":
         orig_timeout = self.waiter.timeout_s
@@ -353,12 +402,10 @@ class Elements:
 
         def _supplier() -> bool:
             try:
-                current_count = len(self._resolve())
+                return len(self._resolve()) == n
             except (NoSuchElementException, StaleElementReferenceException):
                 # If parent element not found, treat as 0 element
-                current_count = 0
-
-            return current_count == n
+                return n == 0
 
         def _on_timeout() -> str:
             # Similar _supplier(), ensure there is no exception during get the length of element
@@ -384,7 +431,7 @@ class Elements:
 
 class IndexedElement(Element):
     """
-    Proxy một phần tử trong collection bằng index (tìm lại mỗi lần để tránh stale).
+    Proxy an element in the collection by index (re-find each time to avoid staleness).
     """
 
     def __init__(self, collection: Elements, index: int, name: Optional[str] = None):

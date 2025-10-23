@@ -102,10 +102,10 @@ def not_(cond: Condition) -> Condition:
 
 
 def in_viewport() -> Condition:
-    # element có kích thước > 0 và tâm nằm trong viewport
+    # element has dimension > 0 and locate in center of viewport
     def _pred(e: WebElement) -> bool:
         try:
-            drv = e.parent  # WebDriver (thuộc tính chuẩn của selenium webelement)
+            drv = e.parent
             rect = drv.execute_script("""
                 const r = arguments[0].getBoundingClientRect();
                 return {cx: Math.floor(r.left + r.width/2),
@@ -126,7 +126,7 @@ def in_viewport() -> Condition:
 
 
 def not_covered() -> Condition:
-    # phần tử trên cùng tại tâm là chính nó (hoặc con của nó) → không bị overlay chặn
+    # the top element at the center is itself (or its children) → not blocked by the overlay
     def _pred(e: WebElement) -> bool:
         try:
             drv = e.parent

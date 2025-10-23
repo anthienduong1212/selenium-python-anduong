@@ -24,7 +24,6 @@ class Waiter:
         self.timeout_s = timeout_s
         self.poll_s = poll_s
         self.screen_dir = screen_dir
-        self._clock = _clock
 
     def until(self,
               supplier: Callable[[], T],
@@ -34,8 +33,8 @@ class Waiter:
                       NoSuchElementException,
                       StaleElementReferenceException),
               ) -> T:
-        start = self._clock()
-        deadline = start + self.timeout_s
+
+        end = time.time() + max(0.0, self.timeout_s)
         last_exc: Optional[BaseException] = None
         polls = 0
 
@@ -53,13 +52,9 @@ class Waiter:
                     raise
 
             # Check timeout after each poll
-            now = self._clock()
-            if now >= deadline:
+            if time.time() >= end:
                 break
-            # sleep after try
-            sleep_for = min(self.poll_s, max(0.0, deadline - now))
-            if sleep_for:
-                time.sleep(sleep_for)
+            time.sleep(self.poll_s)
 
         # Try to take screenshot (Handle availability)
         screenshot_path = None
@@ -77,7 +72,7 @@ class Waiter:
 
         # On timeout handle
         detail = on_timeout()
-        elapsed = self._clock() - start
+        elapsed = max(0.0, self.timeout_s)
 
         msg = f"Timeout after {elapsed:.3f}s (polls={polls}): {detail}"
 
