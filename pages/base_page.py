@@ -1,7 +1,7 @@
 from __future__ import annotations
 from core.element.elements import Element, Elements
-from core.configs.config import Configuration
-from core.drivers.driver_manager import DriverManager
+from core.configuration.configuration import Configuration
+from core.driver.driver_manager import DriverManager
 
 
 class BasePage:

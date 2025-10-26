@@ -1,9 +1,9 @@
 from __future__ import annotations
 from core.waiter.wait import Waiter
-from core.configs.config import Configuration
-from core.drivers.driver_manager import DriverManager
-from core.drivers.driver_conditions import DriverCondition
-from core.reports.reporting import AllureReporter
+from core.configuration.configuration import Configuration
+from core.driver.driver_manager import DriverManager
+from core.driver.driver_conditions import DriverCondition
+from core.report.reporting import AllureReporter
 
 
 class DriverWait:

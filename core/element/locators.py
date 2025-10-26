@@ -91,10 +91,10 @@ class Locator:
             if c.startswith("//"):
                 c = "." + c
             return Locator.xpath(
-                f"({p})//{c.lstrip('./')}",
+                f"{p}//{c.lstrip('./')}",
                 desc or f"{self.desc or ''} > {child.desc or ''}".strip(" >")
             )
-        # context-aware: để resolver dùng search context của Selenium
+        # context-aware: Let resolver use search context of Selenium
         return Locator(
             child.by, child.value,
             desc or f"{self.desc or ''} > {child.desc or ''}".strip(" >"),

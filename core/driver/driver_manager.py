@@ -7,9 +7,9 @@ from dataclasses import dataclass
 from typing import Optional, Dict, Tuple, Any, Callable
 
 from selenium.webdriver.remote.webdriver import WebDriver
-from core.configs.config import Configuration
-from core.drivers.driver_factory import DriverFactory
-from core.reports.reporting import AllureReporter
+from core.configuration.configuration import Configuration
+from core.driver.driver_factory import DriverFactory
+from core.report.reporting import AllureReporter
 
 try:
     import allure

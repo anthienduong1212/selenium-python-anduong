@@ -1,0 +1,1 @@
+xpath=//div[@data-element-name='hotel-mosaic']//button[@data-selenium='favorite-heart']

@@ -2,9 +2,7 @@ from pages.base_page import BasePage
 from core.element.locators import Locator
 from core.utils.browser_utils import BrowserUtils
 from pages.agoda.enums.detailed_navbar_options import NavbarOptions
-
 from core.element.conditions import Condition, visible as cond_visible
-from core.utils.datetime_utils import get_current_date, parse_strict
 
 
 class HotelDetails(BasePage):
@@ -20,6 +18,9 @@ class HotelDetails(BasePage):
     OPT_ROOM_FILTER_OPTION = Locator.xpath("//div[@data-selenium='RoomGridFilter-filter']//div[normalize-space(.)={"
                                            "option}]")
 
+    # -------- FAVORITES -----------
+    BTN_ADD_TO_FAVORITES = "//div[@data-element-name='hotel-mosaic']//button[@data-selenium='favorite-heart']"
+
     def select_navbar_option(self, option: NavbarOptions):
         format_option_locator = self.BTN_NAVBAR_OPTION(option=option)
 
@@ -33,3 +34,6 @@ class HotelDetails(BasePage):
         option = room_filter.find(self.OPT_ROOM_FILTER_OPTION(option=option))
 
         return option.exists()
+
+    def add_to_favorites(self):
+        self.el(self.BTN_ADD_TO_FAVORITES).should(cond_visible()).click()

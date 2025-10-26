@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Optional, Type
 from selenium.webdriver.remote.webdriver import WebDriver
-from core.configs.config import Configuration
+from core.configuration.configuration import Configuration
 from core.providers.browser_provider import BrowserProvider
 from core.providers.registry import discover_and_register, get_provider_class
 

@@ -16,15 +16,15 @@ from selenium.webdriver.common.keys import Keys
 from core.element.locators import Locator
 from core.waiter.wait import Waiter
 from core.element.conditions import Condition, visible as cond_visible, click_ready
-from core.reports.reporting import AllureReporter
+from core.report.reporting import AllureReporter
 
 try:
     import allure
 except Exception:
     allure = None
 
-from core.drivers.driver_manager import DriverManager
-from core.configs.config import Configuration
+from core.driver.driver_manager import DriverManager
+from core.configuration.configuration import Configuration
 
 
 # --------- helper ---------------------

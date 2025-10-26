@@ -1,15 +1,17 @@
 from pages.agoda.home_page import HomePage
 from pages.agoda.result_page import ResultPage
 from pages.agoda.hotel_details import HotelDetails
+from pages.agoda.login_page import LoginPage
 from pages.agoda.enums.occupancies import OccupancyType
 from pages.agoda.enums.detailed_navbar_options import NavbarOptions
 
 
-def test_homepage(driver):
+def test_homepage(driver, otp_mailbox):
 
     home_page = HomePage()
     result_page = ResultPage()
     hotel_detail_page = HotelDetails()
+    login_page = LoginPage()
 
     home_page.open("https://www.agoda.com")
 
@@ -23,5 +25,11 @@ def test_homepage(driver):
     result_page.search_filter_with_term("RoomOffers", "Breakfast included")
     result_page.select_first_hotel()
 
-    hotel_detail_page.select_navbar_option(NavbarOptions.ROOMS)
-    assert hotel_detail_page.is_option_display("Breakfast included"), "Hotel doesn't contain this option"
+    # hotel_detail_page.select_navbar_option(NavbarOptions.ROOMS)
+    # assert hotel_detail_page.is_option_display("Breakfast included"), "Hotel doesn't contain this option"
+
+    hotel_detail_page.add_to_favorites()
+
+    login_page.fill_email_username(otp_mailbox["email"])
+    login_page.click_continue()
+

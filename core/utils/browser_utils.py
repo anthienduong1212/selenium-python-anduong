@@ -5,12 +5,12 @@ import re
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from core.configs.config import Configuration
-from core.drivers.driver_manager import DriverManager
-from core.drivers.driver_conditions import DriverCondition
+from core.configuration.configuration import Configuration
+from core.driver.driver_manager import DriverManager
+from core.driver.driver_conditions import DriverCondition
 from core.waiter.wait import Waiter
-from core.reports.reporting import AllureReporter
-from core.drivers.driver_wait import DriverWait
+from core.report.reporting import AllureReporter
+from core.driver.driver_wait import DriverWait
 
 
 class BrowserUtils:

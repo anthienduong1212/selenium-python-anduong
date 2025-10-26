@@ -69,7 +69,7 @@ class HomePage(BasePage):
         delta = max(0, min(delta, 24))
 
         # If target date is not visible, click next month until see but LIMIT number hits
-        if date_picker.exists():
+        if not date_picker.exists():
             for _ in range(delta):
                 next_month_button.click()
 
