@@ -1,9 +1,10 @@
 from pages.base_page import BasePage
 from core.element.locators import Locator
 from core.utils.browser_utils import BrowserUtils
-from core.element.conditions import Condition, visible as cond_visible
-from core.utils.datetime_utils import get_current_date, parse_strict
+from core.element.conditions import visible as cond_visible
+from core.utils.datetime_utils import parse_strict
 from pages.agoda.enums.occupancies import OccupancyType
+from pages.agoda.data.booking_data import BookingData
 
 
 class HomePage(BasePage):
@@ -26,8 +27,7 @@ class HomePage(BasePage):
     CALD_DATEPICKER_CURRENT_MONTH = '//div[contains(@class,"DayPicker-Caption")]'
 
     # Occupancy Selector and it controls
-    BTN_OCCUPANCY_SELECTOR = Locator.xpath("//div[@id='occupancy-selector']//div[@data-selenium={occupancyType}]"
-                                           , desc="HOME_PAGE Occupancy Selector")
+    BTN_OCCUPANCY_SELECTOR = Locator.xpath("//div[@id='occupancy-selector']//div[@data-selenium={occupancyType}]")
     BTN_QUANTITY_CONTROL = Locator.xpath(".//button[@data-selenium={control}]", desc="HOME_PAGE Increase/Decrease")
     BTN_QUANTITY_NUMBER = Locator.xpath(".//div[contains(@data-selenium,'desktop-occ')]", desc="HOME_PAGE Current "
                                                                                                "Quantity")
@@ -124,8 +124,17 @@ class HomePage(BasePage):
             occupancy_control.should_be(cond_visible()).click()
 
     def click_search(self):
-        search_button = self.el(self.BTN_SEARCH).should_be(cond_visible())
+        search_button = self.el(self.BTN_SEARCH)
         BrowserUtils.click_open_and_switch(lambda: search_button.click())
+
+    def search_for_hotel(self, booking: BookingData):
+        self.enter_text_in_autocomplete(booking.destination)
+        self.select_auto_suggest_item(booking.destination)
+        self.select_booking_date(booking.checkin_date, booking.checkout_date)
+        for enum_val, count in booking.occ_pairs:
+            self.enter_number_of_occupancy(enum_val, count)
+
+        self.click_search()
 
 
 

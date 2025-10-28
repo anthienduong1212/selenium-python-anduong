@@ -6,14 +6,28 @@ from pathlib import Path
 from typing import Type, Dict, List, Optional, Any
 import json, os
 
+
 # ================================
 #          HELPER
 # ================================
 
+_TRUE = {"1", "true", "t", "yes", "y", "on"}
+_FALSE = {"0", "false", "f", "no", "n", "off"}
+
 
 def env_bool(key: str, default: bool) -> bool:
-    v = str(os.getenv(key, str(default))).strip().lower()
-    return v in {"1", "true", "yes", "y", "on"}
+    raw = os.getenv(key)
+    if raw is None or raw.strip() == "":
+        return default
+
+    v = raw.strip().lower()
+    if v in _TRUE:
+        return True
+    if v in _FALSE:
+        return False
+    raise ValueError(f"Invalid boolean for {key}={raw!r}. "
+                     f"Use one of {_TRUE | _FALSE}.")
+
 
 
 def env_int(key: str, default: int | None) -> Optional[int]:
@@ -25,11 +39,15 @@ def env_int(key: str, default: int | None) -> Optional[int]:
 
 
 def _coerce_bool(v) -> Optional[bool]:
-    if isinstance(v, bool): return v
-    if v is None: return None
+    if isinstance(v, bool):
+        return v
+    if v is None:
+        return None
     s = str(v).strip().lower()
-    if s in {"1","true","yes","y","on"}:  return True
-    if s in {"0","false","no","n","off"}: return False
+    if s in _TRUE:
+        return True
+    if s in _FALSE:
+        return False
     return None
 
 
@@ -38,6 +56,7 @@ def _coerce_int(v) -> Optional[int]:
         return None if v is None else int(v)
     except (TypeError, ValueError):
         return None
+
 
 # ================================
 #          CONFIGURATION
@@ -141,4 +160,3 @@ class Configuration:
             "header_offset_px": self.header_offset_px,
             "scroll_backend": self.scroll_backend,
         }
-

@@ -1,3 +1,4 @@
+import os
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -130,6 +131,10 @@ class BrowserProvider(ABC):
         b = self._load_json_block()
         if not b:
             return
+
+        # headless from json just active if there is no HEADLESS on ENV
+        if os.getenv("HEADLESS") is None and isinstance(b.get("headless"), bool) and b["headless"]:
+            self._add_headless(options)
 
         for a in b.get("args", []) or []:
             self._add_args(options, str(a))

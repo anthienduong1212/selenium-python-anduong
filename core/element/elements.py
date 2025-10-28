@@ -27,7 +27,10 @@ from core.driver.driver_manager import DriverManager
 from core.configuration.configuration import Configuration
 
 
-# --------- helper ---------------------
+# ================================
+#            HELPER
+# ================================
+
 def _resolve_selector(selector: Union[str, tuple, Locator]) -> Locator:
     return Locator.from_any(selector)
 
@@ -168,7 +171,6 @@ class Element:
 
     def click(self) -> "Element":
         self.should(cond_visible())
-        self.scroll_into_view()
         try:
             self._resolve().click()
         except ElementClickInterceptedException:

@@ -1,0 +1,10 @@
+{
+  "destination": "Dalat",
+  "checkin_date": "2025-11-01",
+  "checkout_date": "2025-11-30",
+  "occupancies": {
+    "occupancyRooms": 1,
+    "occupancyChildren": 2,
+    "occupancyAdults": 4
+  }
+}

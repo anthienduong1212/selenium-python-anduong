@@ -6,30 +6,20 @@ from pages.agoda.enums.occupancies import OccupancyType
 from pages.agoda.enums.detailed_navbar_options import NavbarOptions
 
 
-def test_homepage(driver, otp_mailbox):
-
+def test_homepage(driver, booking):
     home_page = HomePage()
     result_page = ResultPage()
     hotel_detail_page = HotelDetails()
-    login_page = LoginPage()
 
     home_page.open("https://www.agoda.com")
 
-    home_page.enter_text_in_autocomplete("Dalat")
-    home_page.select_auto_suggest_item("Dalat")
-    home_page.select_booking_date("2025-11-01", "2025-11-30")
-    home_page.enter_number_of_occupancy(OccupancyType.OCCUPANCY_ADULTS, 2)
-    home_page.click_search()
+    home_page.search_for_hotel(booking)
 
     result_page.verify_top_n_hotels_are_in_city(5, "Dalat")
     result_page.search_filter_with_term("RoomOffers", "Breakfast included")
     result_page.select_first_hotel()
 
-    # hotel_detail_page.select_navbar_option(NavbarOptions.ROOMS)
-    # assert hotel_detail_page.is_option_display("Breakfast included"), "Hotel doesn't contain this option"
+    hotel_detail_page.select_navbar_option(NavbarOptions.ROOMS)
+    assert hotel_detail_page.is_option_display("Breakfast included"), "Hotel doesn't contain this option"
 
-    hotel_detail_page.add_to_favorites()
-
-    login_page.fill_email_username(otp_mailbox["email"])
-    login_page.click_continue()
 

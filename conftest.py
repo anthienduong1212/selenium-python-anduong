@@ -1,17 +1,17 @@
+from dotenv import load_dotenv
+load_dotenv()
 import re
 import pytest
-import json
 import os
-from pathlib import Path
 from core.configuration.configuration import Configuration
 from core.driver.driver_manager import DriverManager
 from core.report.reporting import AllureReporter
 from core.utils.slurp_mail_utils import SlurpMailUtil
-from pytest import Config
-from typing import List
+from core.utils.json_utils import load_json_as
 
-from dotenv import load_dotenv
-load_dotenv()
+from pages.agoda.data.booking_data import BookingData
+
+from pytest import Config
 
 
 def pytest_addoption(parser):
@@ -41,6 +41,10 @@ def pytest_addoption(parser):
                     help="Parallel: per-test (each test will be ran on each browser), "
                          "per-worker (each worker uses 1 browser)")
 
+# ================================
+#          CLI PARSING
+# ================================
+
 
 def _flatten(items):
     out, seen = [], set()
@@ -65,27 +69,33 @@ def _resolve_browser_cli(config: Config) -> list[str]:
         return [str(single).strip().lower()]
 
 
+# ================================
+#          TEST DATA
+# ================================
+BOOKING_JSON = os.getenv("BOOKING_JSON", "data/booking.json")
+
+
+@pytest.fixture(scope="module")
+def booking() -> BookingData:
+    return load_json_as(BOOKING_JSON, BookingData.from_dict)
+
+
 def pytest_generate_tests(metafunc):
+    global ids
     if "browser_name" not in metafunc.fixturenames:
         return
-
     mode = metafunc.config.getoption("parallel_mode")
     if mode != "per-test":
         # per-test/none: DON'T parameterize here
         return
-
     browsers = _resolve_browser_cli(metafunc.config)
-
     # Assign mark xdist_group by browser name to gather by worker when using --dist=loadgroup
     # If b is browser name in list, mark this test name = browser
-
     params = [
         pytest.param(b, marks=pytest.mark.xdist_group(name=b))
         for b in browsers
     ]
-
     metafunc.parametrize("browser_name", params, ids=[f"browser={b}" for b in browsers])
-
 
 @pytest.fixture(scope="session")
 def cfg(pytestconfig):
@@ -138,11 +148,11 @@ def _allure_env():
     })
 
 
-@pytest.fixture()
-def otp_mailbox():
-    ms = SlurpMailUtil(api_key=os.getenv("MAILSLURP_API_KEY"))
-    inbox_id, email_addr = ms.create_inbox(expires_in_minutes=30)
-    yield {"ms": ms, "inbox_id": inbox_id, "email": email_addr}
+# @pytest.fixture()
+# def otp_mailbox():
+#     ms = SlurpMailUtil(api_key=os.getenv("MAILSLURP_API_KEY"))
+#     inbox_id, email_addr = ms.create_inbox(expires_in_minutes=30)
+#     yield {"ms": ms, "inbox_id": inbox_id, "email": email_addr}
 
 
 @pytest.hookimpl(hookwrapper=True, tryfirst=True)
