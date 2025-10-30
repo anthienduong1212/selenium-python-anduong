@@ -17,12 +17,6 @@ from core.element.locators import Locator
 from core.waiter.wait import Waiter
 from core.element.conditions import Condition, visible as cond_visible, click_ready
 from core.report.reporting import AllureReporter
-
-try:
-    import allure
-except Exception:
-    allure = None
-
 from core.driver.driver_manager import DriverManager
 from core.configuration.configuration import Configuration
 

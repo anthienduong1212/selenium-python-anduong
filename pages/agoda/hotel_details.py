@@ -10,16 +10,18 @@ class HotelDetails(BasePage):
         super().__init__()
 
     # -------- NAVBAR ----------
-    NAV_NAVBAR = Locator.xpath("//div[@id='navbar']")
-    BTN_NAVBAR_OPTION = Locator.xpath("//button[@aria-label={option} and not(@aria-hidden)]")
+    NAV_NAVBAR = Locator.xpath("//div[@id='navbar']", "HOTEL_DETAILS Nav Bar")
+    BTN_NAVBAR_OPTION = Locator.xpath("//button[@aria-label={option} and not(@aria-hidden)]"
+                                      , "HOTEL_DETAILS Nav Bar {option}")
 
     # -------- ROOM OPTIONS ---------
-    GRD_ROOM_FILTER = "//div[@id='roomGrid']"
+    GRD_ROOM_FILTER = Locator.xpath("//div[contains(@id,'room-grid')]", "HOTEL_DETAILS Room Offer Filter")
     OPT_ROOM_FILTER_OPTION = Locator.xpath("//div[@data-selenium='RoomGridFilter-filter']//div[normalize-space(.)={"
-                                           "option}]")
+                                           "option}]", "HOTEL_DETAILS Room Offer Option {option}")
 
     # -------- FAVORITES -----------
-    BTN_ADD_TO_FAVORITES = "//div[@data-element-name='hotel-mosaic']//button[@data-selenium='favorite-heart']"
+    BTN_ADD_TO_FAVORITES = Locator.xpath("//div[@data-element-name='hotel-mosaic']//button["
+                                         "@data-selenium='favorite-heart']", "HOTEL_DETAILS Add to favorite")
 
     def select_navbar_option(self, option: NavbarOptions):
         format_option_locator = self.BTN_NAVBAR_OPTION(option=option)
