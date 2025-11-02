@@ -1,3 +1,5 @@
+import os
+
 from pages.agoda.home_page import HomePage
 from pages.agoda.result_page import ResultPage
 from pages.agoda.hotel_details import HotelDetails
@@ -5,6 +7,10 @@ from pages.agoda.login_page import LoginPage
 from pages.agoda.enums.occupancies import OccupancyType
 from pages.agoda.enums.detailed_navbar_options import NavbarOptions
 from core.report.reporting import AllureReporter as AR
+from core.assertion.assertion import assert_equal, assert_true, assert_false
+from core.utils.string_utils import contains_text
+
+BASE_URL = os.getenv("BASE_URL")
 
 
 def test_homepage(driver, booking):
@@ -15,8 +21,8 @@ def test_homepage(driver, booking):
     AR.set_title("Search and filter hotels successfully")
 
     with AR.step("Navigate to Agoda"):
-        home_page.open("https://www.agoda.com")
-        AR.attach_text("URL", "https://www.agoda.com")
+        home_page.open(BASE_URL)
+        AR.attach_text("URL", BASE_URL)
 
     with AR.step(f"Search for hotel in {booking.destination}"):
         home_page.search_for_hotel(booking)
@@ -24,17 +30,31 @@ def test_homepage(driver, booking):
     with AR.step(f"Verify that Search Result is displayed correctly with first 5 hotels ({booking.destination})"):
         hotel_list_infor = result_page.get_top_n_hotels(5, booking.destination)
         empty_names, mismatches = result_page.get_missing_data(hotel_list_infor, booking.destination)
-        assert not empty_names, f"Missing name hotel at index: {empty_names}"
-        assert not mismatches, f"Hotel with mismatched city '{city}' at: {mismatches}"
+        assert_false(empty_names, f"Missing name hotel at index: {empty_names}")
+        assert_false(mismatches, f"Hotel with mismatched city at: {mismatches}")
 
     with (AR.step(f"Filter the hotels with breakfast included and select the first hotel")):
         result_page.search_filter_with_term("RoomOffers", "Breakfast included")
-        first_hotel_infor = result_page.get_top_n_hotels(1, booking.destination)
+        first_hotel_infor = result_page.get_top_n_hotels(1, booking.destination)[0]
         result_page.select_first_hotel()
 
     with AR.step(f"Verify that the hotel detailed page is displayed with correct info"):
+        expected = hotel_detail_page.get_hotel_information()
+        actual = first_hotel_infor
+
+        actual_name = actual.get("name")
+        expected_name = expected.get("name")
+
+        assert_equal(actual_name, expected_name,
+                     f"Hotel Name doesn't match | ACTUAL: {actual_name} | EXPECTED: {expected_name}")
+
+        actual_addr = actual.get("address")
+        expected_addr = expected.get("address")
+        assert_true(contains_text(actual_addr, expected_addr),
+                    f"Hotel Address doesn't match | ACTUAL: {actual_addr} | EXPECTED: {expected_addr}")
+
         hotel_detail_page.select_navbar_option(NavbarOptions.ROOMS)
-        assert hotel_detail_page.is_option_display("Breakfast included"), "Hotel doesn't contain this option"
+        assert_true(hotel_detail_page.is_option_display("Breakfast included"), "Hotel doesn't contain this option")
 
 
 

@@ -5,7 +5,7 @@ from selenium.webdriver.common.by import By
 from core.utils.browser_utils import BrowserUtils
 from core.utils.string_utils import contains_text
 from core.element.conditions import Condition, visible as cond_visible
-from core.utils.datetime_utils import get_current_date, parse_strict
+from core.utils.datetime_utils import parse_strict
 from typing import Tuple
 
 
@@ -27,7 +27,7 @@ class ResultPage(BasePage):
     OPT_FILTER_OPTION = Locator.xpath("//div[.//span[normalize-space(.)={option_name}]]/preceding-sibling::div//input"
                                       ,"RESULT_PAGE Filter option {option_name}")
 
-    def get_top_n_hotels(self, n: int, city: str) -> Tuple[Dict[str, Any], ...]:
+    def get_top_n_hotels(self, n: int, city: str) -> list[Dict[str, Any]]:
         """
         Verify: Top n LI_HOTEL_INFORMATION elements have:
         - name exists & not empty
@@ -54,7 +54,7 @@ class ResultPage(BasePage):
             if not contains_text(addr, city):
                 mismatches.append((i, addr))
 
-        return tuple(hotel_data_list)
+        return list(hotel_data_list)
 
     def get_missing_data(self, hotel_data: Tuple[Dict[str, Any], ...], city: str) -> Tuple[List[int], List[Tuple[int, str]]]:
         mismatched_cities: List[Tuple[int, str]] = []

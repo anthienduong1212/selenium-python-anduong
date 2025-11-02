@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "C:\Users\baon2\IdeaProjects\Selenium_Python\selenium-python-anduong\core\report\reporting.py", line 64, in step
+    yield
+  File "C:\Users\baon2\IdeaProjects\Selenium_Python\selenium-python-anduong\tests\agoda\test_booking.py", line 53, in test_homepage
+    assert_true(contains_text(actual_addr, expected_addr),
+  File "C:\Users\baon2\IdeaProjects\Selenium_Python\selenium-python-anduong\core\assertion\assertion.py", line 38, in assert_true
+    _fail(msg or "Expected condition to be True")
+  File "C:\Users\baon2\IdeaProjects\Selenium_Python\selenium-python-anduong\core\assertion\assertion.py", line 22, in _fail
+    raise AssertionError(msg)
+AssertionError: Hotel Address doesn't match | ACTUAL: Xuan Huong Lake, Dalat - 0.7 km to center | EXPECTED: 1 Ba Huyen Thanh Quan Street, Ward 10, Da Lat City, Lam Dong Province, Vietnam Golden Imperial Hotel Da Lat, Xuan Huong Lake, Dalat, Vietnam, 66117

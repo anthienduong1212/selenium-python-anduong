@@ -1,3 +1,4 @@
+from typing import Tuple, Dict, Any
 from pages.base_page import BasePage
 from core.element.locators import Locator
 from core.utils.browser_utils import BrowserUtils
@@ -23,6 +24,11 @@ class HotelDetails(BasePage):
     BTN_ADD_TO_FAVORITES = Locator.xpath("//div[@data-element-name='hotel-mosaic']//button["
                                          "@data-selenium='favorite-heart']", "HOTEL_DETAILS Add to favorite")
 
+    # -------- INFORMATION -----------
+    TXT_HOTEL_INFO_PARENT = Locator.xpath("//div[@id='property-main-content']")
+    TXT_HOTEL_NAME = Locator.xpath("//h1[@data-selenium='hotel-header-name']")
+    TXT_HOTEL_ADDRESS = Locator.xpath("//span[@data-selenium='hotel-address-map']")
+
     def select_navbar_option(self, option: NavbarOptions):
         format_option_locator = self.BTN_NAVBAR_OPTION(option=option)
 
@@ -39,3 +45,12 @@ class HotelDetails(BasePage):
 
     def add_to_favorites(self):
         self.el(self.BTN_ADD_TO_FAVORITES).should(cond_visible()).click()
+
+    def get_hotel_information(self) -> dict[str, Any]:
+        parent = self.el(self.TXT_HOTEL_INFO_PARENT).should_be(cond_visible())
+        parent.scroll_into_view()
+
+        hotel_name = parent.find(self.TXT_HOTEL_NAME).text()
+        hotel_addr = parent.find(self.TXT_HOTEL_ADDRESS).text()
+
+        return {"name": hotel_name, "address": hotel_addr}

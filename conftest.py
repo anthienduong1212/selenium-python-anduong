@@ -1,17 +1,20 @@
-from dotenv import load_dotenv
-load_dotenv()
 import re
 import pytest
 import os
+
+from dotenv import load_dotenv
+load_dotenv()
+
 from core.configuration.configuration import Configuration
 from core.driver.driver_manager import DriverManager
 from core.report.reporting import AllureReporter
-from core.utils.slurp_mail_utils import SlurpMailUtil
 from core.utils.json_utils import load_json_as
-
-from pages.agoda.data.booking_data import BookingData
-
+from tests.data.booking_data import BookingData
+from tests.data.resolve_booking_date import resolve_booking_date
 from pytest import Config
+
+from core.logging.logging import Logger
+Logger.setup_logging()
 
 
 def pytest_addoption(parser):
@@ -41,6 +44,7 @@ def pytest_addoption(parser):
                     help="Parallel: per-test (each test will be ran on each browser), "
                          "per-worker (each worker uses 1 browser)")
 
+
 # ================================
 #          CLI PARSING
 # ================================
@@ -60,24 +64,32 @@ def _flatten(items):
 
 
 def _resolve_browser_cli(config: Config) -> list[str]:
-    multi = config.getoption("browsers", default=None)
-    single = config.getoption("browser", default=None)
-    if multi:
-        lst = _flatten(multi)
-        return lst or ["chrome"]
-    if single:
-        return [str(single).strip().lower()]
+    Logger.debug("Resolving browser CLI options")
+    try:
+        multi = config.getoption("browsers", default=None)
+        single = config.getoption("browser", default=None)
+        if multi:
+            browsers = _flatten(multi)
+            Logger.info(f"Resolved browsers: {browsers}")
+            return browsers or ["chrome"]
+        if single:
+            Logger.info(f"Resolved single browser: {single}")
+            return [str(single).strip().lower()]
+    except Exception as e:
+        Logger.error(f"Error resolving browser CLI options: {e}")
+        raise
 
 
 # ================================
 #          TEST DATA
 # ================================
-BOOKING_JSON = os.getenv("BOOKING_JSON", "data/booking.json")
+BOOKING_JSON = os.getenv("BOOKING_JSON", "resources/agoda/data.json")
 
 
 @pytest.fixture(scope="module")
 def booking() -> BookingData:
-    return load_json_as(BOOKING_JSON, BookingData.from_dict)
+    raw = load_json_as(BOOKING_JSON, BookingData.from_dict)
+    return resolve_booking_date(raw)
 
 
 def pytest_generate_tests(metafunc):
@@ -96,6 +108,7 @@ def pytest_generate_tests(metafunc):
         for b in browsers
     ]
     metafunc.parametrize("browser_name", params, ids=[f"browser={b}" for b in browsers])
+
 
 @pytest.fixture(scope="session")
 def cfg(pytestconfig):
@@ -129,14 +142,20 @@ def driver(request, browser_name) -> object:
     cli_cfg_path = request.config.getoption("--browser-config", default=None)
     cfg = Configuration.from_cli_file(cli_cfg_path)
     cfg.browser = browser_name
+
+    Logger.info(f"Initializing driver for browser: {browser_name}")
     drv = DriverManager.get_driver(cfg)
     try:
         yield drv
+        Logger.info(f"Driver for browser {browser_name} finished successfully.")
+    except Exception as e:
+        Logger.error(f"Error during driver execution: {e}")
     finally:
         try:
             DriverManager.quit_driver()
-        except Exception:
-            pass
+            Logger.info(f"Driver for browser {browser_name} quit successfully.")
+        except Exception as e:
+            Logger.error(f"Error while quitting driver: {e}")
 
 
 @pytest.fixture(scope="session", autouse=True)

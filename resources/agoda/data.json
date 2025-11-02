@@ -1,0 +1,10 @@
+{
+  "destination": "Dalat",
+  "checkin_date":  { "$date": { "base": "TODAY",        "offset": "P0D" } },
+  "checkout_date": { "$date": { "base": "TODAY",  "offset": "P3D" } },
+  "occupancies": {
+    "occupancyRooms": 1,
+    "occupancyChildren": 0,
+    "occupancyAdults": 2
+  }
+}

@@ -4,7 +4,7 @@ from core.utils.browser_utils import BrowserUtils
 from core.element.conditions import visible as cond_visible
 from core.utils.datetime_utils import parse_strict
 from pages.agoda.enums.occupancies import OccupancyType
-from pages.agoda.data.booking_data import BookingData
+from tests.data.booking_data import BookingData
 
 
 class HomePage(BasePage):

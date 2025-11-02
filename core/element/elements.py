@@ -20,6 +20,8 @@ from core.report.reporting import AllureReporter
 from core.driver.driver_manager import DriverManager
 from core.configuration.configuration import Configuration
 
+from core.logging.logging import Logger
+
 
 # ================================
 #            HELPER
@@ -274,6 +276,7 @@ class Element:
         desc = f'Element("{self.name}") should: ' + ", ".join(c.name for c in conditions)
 
         def _supplier() -> bool:
+            Logger.debug(f"Checking element {self.name} condition")
             try:
                 el = self._resolve()
             except (NoSuchElementException, StaleElementReferenceException):
@@ -288,6 +291,7 @@ class Element:
 
         def _on_timeout() -> str:
             # On time out, record the last state (or not found issue)
+            Logger.info("Condition was not met within the timeout period.")
             try:
                 el = self._resolve()
                 snapshot = f'text="{(el.text or "").strip()}", enabled={el.is_enabled()}, displayed={el.is_displayed()}'
@@ -296,6 +300,7 @@ class Element:
             return f"{desc}. Last state: {snapshot}. Locator={self.locator}"
 
         def _shot(path: str) -> bool:
+            Logger.info(f"Attempting to take a screenshot at: {path}")
             try:
                 return self._driver().save_screenshot(path)
             except Exception:

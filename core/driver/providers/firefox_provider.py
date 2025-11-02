@@ -1,13 +1,11 @@
 from abc import ABC
-from typing import Any, Optional, Dict
+from typing import Any, Dict
 import os
 from selenium import webdriver
-from selenium.webdriver.firefox.service import Service as FirefoxService
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.remote.webdriver import WebDriver
-from webdriver_manager.firefox import GeckoDriverManager
-from core.providers.browser_provider import BrowserProvider
-from core.providers.registry import register_provider
+from core.driver.providers.browser_provider import BrowserProvider
+from core.driver.providers.registry import register_provider
 
 
 def _env_json_obj(key: str) -> dict | None:

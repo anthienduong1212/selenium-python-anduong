@@ -1,13 +1,11 @@
 from abc import ABC
-from typing import Any, Optional
+from typing import Any
 import os
 from selenium import webdriver
-from selenium.webdriver.edge.service import Service as EdgeService
 from selenium.webdriver.edge.options import Options as EdgeOptions
 from selenium.webdriver.remote.webdriver import WebDriver
-from webdriver_manager.microsoft import EdgeChromiumDriverManager
-from core.providers.browser_provider import BrowserProvider
-from core.providers.registry import register_provider
+from core.driver.providers.browser_provider import BrowserProvider
+from core.driver.providers.registry import register_provider
 
 
 def _env_csv(key: str) -> list[str]:
