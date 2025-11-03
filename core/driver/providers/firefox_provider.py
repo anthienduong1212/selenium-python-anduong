@@ -38,13 +38,7 @@ class FirefoxProvider(BrowserProvider, ABC):
                 pass
 
     def apply_vendor_overrides(self, options):
-        prefs = _env_json_obj("FIREFOX_PREFS_JSON")
-        if prefs:
-            for k, v in prefs.items():
-                try:
-                    options.set_preference(k, v)  # Firefox dùng set_preference cho prefs.
-                except Exception:
-                    pass
+        return options
 
     def _apply_vendor_json(self, options: FirefoxOptions, block: dict) -> None:
         prefs = block.get("prefs")
@@ -55,10 +49,12 @@ class FirefoxProvider(BrowserProvider, ABC):
                 except Exception:
                     pass
 
-        mfo = block.get("moz:firefoxOptions")
-        if isinstance(mfo, dict):
-            # cách đơn giản & đúng chuẩn: set capability vendor-prefixed.
-            options.set_capability("moz:firefoxOptions", mfo)
+        mfo = block.get("moz:firefoxOptions") or {}
+        for a in (mfo.get("args") or []):
+            options.add_argument(str(a))
+        binary = mfo.get("binary")
+        if isinstance(binary, dict) and binary.strip():
+            options.binary_location = binary
 
     def create_local_driver(self, options: Any) -> WebDriver:
         return webdriver.Firefox(options)

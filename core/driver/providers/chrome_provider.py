@@ -35,30 +35,20 @@ class ChromeProvider(BrowserProvider, ABC):
         return webdriver.Chrome(options)
 
     def apply_vendor_overrides(self, options):
-
-        for a in _env_csv("CHROME_ARGS"):
-            self._add_args(options, a)
-
-        prefs = _env_json_obj("CHROME_PREFS_JSON")
-        if prefs:
-            self._set_chromium_prefs(options, prefs)
-
-        excl = _env_csv("CHROME_EXCLUDE_SWITCHES")
-        if excl:
-            try:
-                options.add_experimental_option("excludeSwitches", excl)
-            except Exception:
-                pass
+        return options
 
     def _apply_vendor_json(self, options: ChromeOptions, block: dict) -> None:
         gco = block.get("goog:chromeOptions")
+
         if isinstance(gco, dict):
             # theo Selenium/Chromium: args, prefs, excludeSwitches...
             for a in gco.get("args", []) or []:
                 self._add_args(options, str(a))
+
             prefs = gco.get("prefs")
             if isinstance(prefs, dict):
                 self._set_chromium_prefs(options, prefs)
+
             excl = gco.get("excludeSwitches")
             if isinstance(excl, list) and excl:
                 try:

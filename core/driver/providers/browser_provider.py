@@ -1,4 +1,5 @@
 import os
+import json
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -22,7 +23,7 @@ class BrowserProvider(ABC):
     @abstractmethod
     def build_options(self) -> Any:
         """Return browser-specific Options instance (ChromeOptions/FirefoxOptions/EdgeOptions)."""
-        Logger.debug(Logger.info(f"Using remote URL: {remote_url}" if remote_url else "Using local driver."))
+        Logger.info(f"Using remote URL: {remote_url}" if remote_url else "Using local driver.")
         raise NotImplementedError
 
     def create_driver(self) -> WebDriver:
@@ -30,9 +31,10 @@ class BrowserProvider(ABC):
         Logger.info("Creating WebDriver instance...")
         options = self.build_options()
         self.apply_common_settings(options)
+        self._apply_overrides_from_json(options)
         self.apply_vendor_overrides(options)
 
-        remote_url = self.config.per_browser_remote_url.get(self.name) or self.config.remote_url
+        remote_url = self.config.remote_url
         if remote_url:
             return self.create_remote_driver(options, remote_url)
 
@@ -126,27 +128,36 @@ class BrowserProvider(ABC):
           "firefox": {...}
         }
         """
-        Logger.info(f"Loading JSON configuration from: {self._json_path()}")
         p = self._json_path()
+        Logger.info(f"Loading JSON configuration from: {self._json_path()}")
         if not p:
+            Logger.info(f"Config file not found at: {p}")
             return {}
         try:
-            data = json.loads(p.read_text(encoding="utf-8"))
-            block = data.get(self.name, {})
-            return block if isinstance(block, dict) else {}
+            raw = p.read_text(encoding="utf-8")
+            data = json.loads(raw)
+            if not isinstance(data, dict):
+                Logger.info("Top-level JSON is not an object; got %s", type(data).__name__)
+                return {}
+
+            key = (getattr(self, "name", None) or self.config.browser or "").strip().lower()
+            block = data.get(key, {})
+            if isinstance(block, dict):
+                Logger.info(f"[JSON] Loaded block for '{key}': keys={list(block.keys())}")
+                return block
+            else:
+                Logger.info(f"There is no valid dict block for '{key}' in JSON (found {type(block).__name__})")
+                return {}
         except Exception:
+            Logger.error(f"There is no config for {self.name} found")
             return {}
 
     def _apply_overrides_from_json(self, options: Any) -> None:
         """Apply standard options: args, prefs, capabilities"""
-        Logger.debug("Applying overrides from JSON configuration...")
+        Logger.info("Applying overrides from JSON configuration...")
         b = self._load_json_block()
         if not b:
             return
-
-        # headless from json just active if there is no HEADLESS on ENV
-        if os.getenv("HEADLESS") is None and isinstance(b.get("headless"), bool) and b["headless"]:
-            self._add_headless(options)
 
         for a in b.get("args", []) or []:
             self._add_args(options, str(a))

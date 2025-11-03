@@ -18,7 +18,7 @@ class Logger:
                 logging.FileHandler("app.log", mode="a")  # Log to file
             ]
         )
-        cls._logger = logging.getLogger("ApplicationLogger")
+        cls._logger = logging.getLogger("SeleniumPythonLogger")
 
     @classmethod
     def debug(cls, message):

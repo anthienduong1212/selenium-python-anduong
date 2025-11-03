@@ -1,6 +1,6 @@
 {
+  "headless": false,
   "chrome": {
-    "headless": false,
     "args": ["--disable-gpu", "--window-size=1920,1080"],
     "prefs": {
       "download.default_directory": "C:/Downloads",
@@ -12,7 +12,6 @@
     }
   },
   "edge": {
-    "headless": true,
     "args": ["--inprivate", "--window-size=1920,1080"],
     "prefs": {
       "download.default_directory": "C:/Downloads"
@@ -25,7 +24,6 @@
     }
   },
   "firefox": {
-    "headless": false,
     "prefs": {
       "browser.download.dir": "C:/Downloads",
       "browser.download.folderList": 2,

@@ -22,6 +22,7 @@ def _env_json_obj(key: str) -> dict | None:
     except Exception:
         return None
 
+
 @register_provider
 class EdgeProvider(BrowserProvider, ABC):
     name = "edge"
@@ -31,20 +32,7 @@ class EdgeProvider(BrowserProvider, ABC):
         return EdgeOptions()
 
     def apply_vendor_overrides(self, options):
-        for a in _env_csv("EDGE_ARGS"):
-            self._add_args(options, a)
-        prefs = _env_json_obj("EDGE_PREFS_JSON")
-        if prefs:
-            try:
-                options.add_experimental_option("prefs", prefs)
-            except Exception:
-                pass
-        excl = _env_csv("EDGE_EXCLUDE_SWITCHES")
-        if excl:
-            try:
-                options.add_experimental_option("excludeSwitches", excl)
-            except Exception:
-                pass
+        return options
 
     def _apply_vendor_json(self, options: EdgeOptions, block: dict) -> None:
         # Edge is Chromium-based; has "ms:edgeOptions" (vendor prefixed).
@@ -52,12 +40,14 @@ class EdgeProvider(BrowserProvider, ABC):
         if isinstance(mso, dict):
             for a in mso.get("args", []) or []:
                 self._add_args(options, str(a))
+
             prefs = mso.get("prefs")
             if isinstance(prefs, dict):
                 try:
                     options.add_experimental_option("prefs", prefs)
                 except Exception:
                     pass
+
             excl = mso.get("excludeSwitches")
             if isinstance(excl, list) and excl:
                 try:

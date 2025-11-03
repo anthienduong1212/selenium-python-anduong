@@ -1,11 +1,11 @@
 from __future__ import annotations
+import json, os
 from dataclasses import dataclass, field
 from copy import deepcopy
 from importlib.resources import files
 from pathlib import Path
 from typing import Type, Dict, List, Optional, Any
-import json, os
-
+from core.logging.logging import Logger
 
 # ================================
 #          HELPER
@@ -27,7 +27,6 @@ def env_bool(key: str, default: bool) -> bool:
         return False
     raise ValueError(f"Invalid boolean for {key}={raw!r}. "
                      f"Use one of {_TRUE | _FALSE}.")
-
 
 
 def env_int(key: str, default: int | None) -> Optional[int]:
@@ -78,12 +77,6 @@ class Configuration:
     window_height: int = env_int("WINDOW_HEIGHT", 1080) or 1080
     maximize: bool = env_bool("START_MAXIMIZED", True)
 
-    extra_args: Dict[str, List[str]] = field(default_factory=dict)
-    extra_prefs: Dict[str, Dict[str, Any]] = field(default_factory=dict)
-    extra_caps: Dict[str, Dict[str, Any]] = field(default_factory=dict)
-    vendor_caps: Dict[str, Dict[str, Any]] = field(default_factory=dict)
-    per_browser_remote_url: Dict[str, str] = field(default_factory=dict)
-
     auto_scroll: bool = env_bool("AUTO_SCROLL", True)
     scroll_block: str = os.getenv("SCROLL_BLOCK", "center")
     header_offset_px: int = env_int("HEADER_OFFSET_PX", 0) or 0
@@ -102,13 +95,14 @@ class Configuration:
         """
         cfg = cls()
 
-        path = Path(cli_path) if cli_path else Path("config/configuration.json")
+        path = Path(cli_path) if cli_path else Path("resources/config.json")
         if path.is_file():
             cfg.apply_overrides_from_file(path)
         return cfg
 
     def apply_overrides_from_file(self, path: Path) -> None:
         data = json.loads(path.read_text("utf-8"))
+        Logger.info(f"Loaded configuration from {path}")
         if not isinstance(data, dict):
             return
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Optional, Type
 from selenium.webdriver.remote.webdriver import WebDriver
 from core.configuration.configuration import Configuration
-from core.driver.providers import BrowserProvider
+from core.driver.providers.browser_provider import BrowserProvider
 from core.driver.providers.registry import discover_and_register, get_provider_class
 
 
@@ -13,7 +13,7 @@ class DriverFactory:
     `Configuration` and handle by itself. DriverManager will use this class when they need to create a new driver.
     """
 
-    def __init__(self, provider_package: str = "core.providers"):
+    def __init__(self, provider_package: str):
         discover_and_register(provider_package)
 
 
