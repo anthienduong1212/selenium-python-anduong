@@ -31,9 +31,6 @@ class EdgeProvider(BrowserProvider, ABC):
     def build_options(self):
         return EdgeOptions()
 
-    def apply_vendor_overrides(self, options):
-        return options
-
     def _apply_vendor_json(self, options: EdgeOptions, block: dict) -> None:
         # Edge is Chromium-based; has "ms:edgeOptions" (vendor prefixed).
         mso = block.get("ms:edgeOptions")

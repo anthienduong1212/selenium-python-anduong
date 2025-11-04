@@ -37,9 +37,6 @@ class FirefoxProvider(BrowserProvider, ABC):
             except Exception:
                 pass
 
-    def apply_vendor_overrides(self, options):
-        return options
-
     def _apply_vendor_json(self, options: FirefoxOptions, block: dict) -> None:
         prefs = block.get("prefs")
         if isinstance(prefs, dict):

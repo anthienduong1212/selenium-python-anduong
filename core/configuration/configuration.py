@@ -1,8 +1,8 @@
 from __future__ import annotations
 import json, os
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace as dc_replace
 from copy import deepcopy
-from importlib.resources import files
+from importlib import resources
 from pathlib import Path
 from typing import Type, Dict, List, Optional, Any
 from core.logging.logging import Logger
@@ -82,56 +82,94 @@ class Configuration:
     header_offset_px: int = env_int("HEADER_OFFSET_PX", 0) or 0
     scroll_backend: str = os.getenv("SCROLL_BACKEND", "js")  # js | wheel | move
 
+    _json_data: Dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
     # ================================
     #          FACTORIES
     # ================================
 
     @classmethod
-    def from_cli_file(cls, cli_path: Optional[str] = None) -> "Configuration":
+    def from_cli_file(cls, cli_path: Optional[str] = None) -> Optional[Path]:
         """
-        ENV is default. If configuration is available:
-            - Prioritize CLI --browser-config
-            - If not, default path: config/configuration.json
+        Precedence:
+        1) CLI --browser-config
+        2) ENV BROWSER_CONFIG_PATH
+        3) Package resource: yourpkg/resources/configuration.json
         """
-        cfg = cls()
 
-        path = Path(cli_path) if cli_path else Path("resources/config.json")
-        if path.is_file():
-            cfg.apply_overrides_from_file(path)
+        if cli_path:
+            p = Path(cli_path).expanduser()
+            Logger.info(f"Loading config from {cli_path}")
+            if p.exists():
+                return p
+
+        path_from_env = os.getenv("BROWSER_CONFIG_PATH")
+        if path_from_env:
+            p = Path(path_from_env).expanduser()
+            Logger.info(f"Loading config from env {path_from_env}")
+            if p.exists():
+                return p
+
+        try:
+            base = resources.files("resources")
+            p = base / "configuration.json"
+            if p.is_file():
+                Logger.info(f"Loading default config from resources")
+                return p
+        except Exception:
+            Logger.debug("No default configuration file")
+            pass
+
+    @classmethod
+    def from_sources(cls, *, cli_browser_config_path: Optional[str] = None, **overrides) -> "Configuration":
+        """
+        Create Configuration and load JSON once (cache into _json_data) in order:
+        CLI > ENV > package resource. Then merge JSON > defaults/ENV (if you have one).
+        """
+        cfg = cls(**overrides)
+
+        p = cls.from_cli_file(cli_browser_config_path)
+        json_data: Dict[str, Any] = {}
+
+        if p is not None:
+            try:
+                Logger.debug("Reading config from json")
+                raw = p.read_text(encoding="utf-8")
+                json_data = json.loads(raw) or {}
+            except Exception:
+                json_data = {}
+                Logger.error("There is no configuration load")
+
+        cfg = cls.replace(cfg, _json_data=json_data)
+
+        cfg = cls.replace(cfg, browser=cfg.browser.strip().lower())
         return cfg
 
-    def apply_overrides_from_file(self, path: Path) -> None:
-        data = json.loads(path.read_text("utf-8"))
-        Logger.info(f"Loaded configuration from {path}")
-        if not isinstance(data, dict):
-            return
+    def replace(self, **overrides) -> "Configuration":
 
-        # Only permit these field
-        cast_map: Dict[str, Any] = {
-            "browser": lambda v: str(v).lower(),
-            "headless": _coerce_bool,
-            "remote_url": lambda v: str(v),
+        merge_keys = ("extra_caps", "per_browser_remote_url")
+        merged :Dict[str, Any] = {}
 
-            "wait_timeout_ms": _coerce_int,
-            "polling_interval_ms": _coerce_int,
-            "page_load_timeout_ms": _coerce_int,
-            "implicit_wait_ms": _coerce_int,
+        for k in merge_keys:
+            if k in overrides and overrides[k] is not None:
+                current_val = getattr(self, k) or {}
+                incoming = overrides.pop(k) or {}
+                merged[k] = {**current_val, **incoming}
 
-            "window_width": _coerce_int,
-            "window_height": _coerce_int,
-            "maximize": _coerce_bool,
+        if "browser" in overrides and overrides["browser"]:
+            merged["browser"] = str(overrides.pop("browser")).strip().lower()
 
-            "auto_scroll": _coerce_bool,
-            "scroll_block": lambda v: str(v),
-            "header_offset_px": _coerce_int,
-            "scroll_backend": lambda v: str(v),
-        }
+        # Return a new configuration instance with new _json_data
+        return dc_replace(self, **overrides, **merged)
 
-        for k, caster in cast_map.items():
-            if k in data and data[k] is not None:
-                val = caster(data[k])
-                if val is not None:
-                    setattr(self, k, val)
+    def json_global(self) -> Dict[str, Any]:
+        return self._json_data if isinstance(self._json_data, dict) else {}
+
+    def json_browser_block(self, name: Optional[str] = None) -> Dict[str, Any]:
+        key = (name or self.browser or "").strip().lower()
+        data = self.json_global()
+        block = data.get(key, {}) if isinstance(data, dict) else {}
+        return block if isinstance(block, dict) else {}
 
     # ================================
     #          DEBUG / LOGGING

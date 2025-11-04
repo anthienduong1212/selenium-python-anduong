@@ -37,7 +37,7 @@ def pytest_addoption(parser):
     group.addoption("--remote-url", dest="remote_url", action="store", default=None,
                     help="Selenium Grid URL, e.g. http://127.0.0.1:4444/wd/hub")
     group.addoption("--browser-config", dest="browser_config", action="store", default=None,
-                    help="Path to config.json (optional)")
+                    help="Path to configuration.json (optional)")
     group.addoption("--parallel-mode", dest="parallel_mode",
                     choices=["per-test", "per-worker", "none"],
                     default="per-test",
@@ -112,8 +112,8 @@ def pytest_generate_tests(metafunc):
 
 @pytest.fixture(scope="session")
 def cfg(pytestconfig):
-    return Configuration.from_cli_file(pytestconfig.getoption("--browser-config"))
-
+    cli_path = pytestconfig.getoption("--browser-config")
+    return Configuration.from_sources(cli_browser_config_path=cli_path)
 
 @pytest.fixture(scope="session")
 def browser_name(request, worker_id):
@@ -133,14 +133,13 @@ def browser_name(request, worker_id):
 
 
 @pytest.fixture(scope="function")
-def driver(request, browser_name) -> object:
+def driver(request, browser_name, cfg) -> object:
     """
     Fixture initializes and returns a driver for each test. Automatically calls DriverManager.quit_driver() when finished
     :param request:
     :param browser_name: automatically provided by the pytest_generate_tests hook
     """
-    cli_cfg_path = request.config.getoption("--browser-config", default=None)
-    cfg = Configuration.from_cli_file(cli_cfg_path)
+
     cfg.browser = browser_name
 
     Logger.info(f"Initializing driver for browser: {browser_name}")

@@ -34,9 +34,6 @@ class ChromeProvider(BrowserProvider, ABC):
     def create_local_driver(self, options: Any) -> WebDriver:
         return webdriver.Chrome(options)
 
-    def apply_vendor_overrides(self, options):
-        return options
-
     def _apply_vendor_json(self, options: ChromeOptions, block: dict) -> None:
         gco = block.get("goog:chromeOptions")
 

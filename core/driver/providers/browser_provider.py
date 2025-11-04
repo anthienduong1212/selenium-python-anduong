@@ -32,7 +32,6 @@ class BrowserProvider(ABC):
         options = self.build_options()
         self.apply_common_settings(options)
         self._apply_overrides_from_json(options)
-        self.apply_vendor_overrides(options)
 
         remote_url = self.config.remote_url
         if remote_url:
@@ -52,14 +51,6 @@ class BrowserProvider(ABC):
         from selenium import webdriver
         Logger.info(f"Creating remote WebDriver with URL: {remote_url}")
         return webdriver.Remote(command_executor=remote_url, options=options)
-
-    # ================================
-    #         HOOKS OVERRIDEABLE
-    # ================================
-
-    def apply_vendor_overrides(self, options: Any):
-        """Subclasses can add args/prefs/caps of vendor from ENV/JSON"""
-        return
 
     # ================================
     #         COMMON SETTINGS
@@ -114,74 +105,52 @@ class BrowserProvider(ABC):
     #         JSON OVERRIDES
     # ================================
 
-    def _json_path(self) -> Path | None:
-        p = os.getenv("BROWSER_CONFIG_PATH") or "config/configuration.json"
-        pp = Path(p)
-        return pp if pp.is_file() else None
-
-    def _load_json_block(self) -> dict:
-        """
-        Get block JSON by provider name:
-        {
-          "chrome": {...},
-          "edge": {...},
-          "firefox": {...}
-        }
-        """
-        p = self._json_path()
-        Logger.info(f"Loading JSON configuration from: {self._json_path()}")
-        if not p:
-            Logger.info(f"Config file not found at: {p}")
-            return {}
-        try:
-            raw = p.read_text(encoding="utf-8")
-            data = json.loads(raw)
-            if not isinstance(data, dict):
-                Logger.info("Top-level JSON is not an object; got %s", type(data).__name__)
-                return {}
-
-            key = (getattr(self, "name", None) or self.config.browser or "").strip().lower()
-            block = data.get(key, {})
-            if isinstance(block, dict):
-                Logger.info(f"[JSON] Loaded block for '{key}': keys={list(block.keys())}")
-                return block
-            else:
-                Logger.info(f"There is no valid dict block for '{key}' in JSON (found {type(block).__name__})")
-                return {}
-        except Exception:
-            Logger.error(f"There is no config for {self.name} found")
-            return {}
-
     def _apply_overrides_from_json(self, options: Any) -> None:
-        """Apply standard options: args, prefs, capabilities"""
+        """
+        Get data from Configuration (cached JSON):
+        - global capabilities
+        - block by browser: args/prefs/capabilities
+        - authorize vendor keys to subclass
+        """
+        data = self.config.json_global()
+        block = self.config.json_browser_block(self.config.browser)
+
         Logger.info("Applying overrides from JSON configuration...")
-        b = self._load_json_block()
-        if not b:
-            return
-
-        for a in b.get("args", []) or []:
-            self._add_args(options, str(a))
-
-        # capabilities (W3C standard; vendor keys must have a colon :)
-        caps = b.get("capabilities")
+        # global caps
+        caps = data.get("capabilities")
         if isinstance(caps, dict):
-            self._set_capabilities(options, caps)
+            for k, v in caps.items():
+                try:
+                    options.set_capability(k, v)
+                except Exception:
+                    pass
 
-        # prefs: default Chromium format; Firefox will override processing in subclass
-        prefs = b.get("prefs")
+        # per-browser block (args/prefs/caps)
+        if isinstance(block, dict):
+            for a in (block.get("args") or []):
+                try:
+                    options.add_argument(str(a))
+                except Exception:
+                    pass
+
+        prefs = block.get("prefs")
         if isinstance(prefs, dict):
-            self._set_chromium_prefs(options, prefs)
+            try:
+                options.add_experimental_option("prefs", prefs)
+            except Exception:
+                pass
 
-        # Return vendor keys (ms:edgeOptions, moz:firefoxOptions, goog:chromeOptions) to subclass
-        self._apply_vendor_json(options, b)
+        caps2 = block.get("capabilities")
+        if isinstance(caps2, dict):
+            for k, v in caps2.items():
+                try:
+                    options.set_capability(k, v)
+                except Exception:
+                    pass
+
+        # vendor keys: goog:chromeOptions / ms:edgeOptions / moz:firefoxOptions
+        self._apply_vendor_json(options, block)
 
     def _apply_vendor_json(self, options: Any, block: dict) -> None:
         """Subclasses handle vendor keys from block (noop mặc định)."""
         return
-
-
-
-
-
-
-

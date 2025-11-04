@@ -1,0 +1,11 @@
+[32mINFO    [0m SeleniumPythonLogger:logging.py:29 Loading config from env resources/configuration.json
+[32mINFO    [0m SeleniumPythonLogger:logging.py:29 Resolved date: 2025-11-04 22:06:31.281969+07:00
+[32mINFO    [0m SeleniumPythonLogger:logging.py:29 Resolved date: 2025-11-07 22:06:31.283014+07:00
+[32mINFO    [0m SeleniumPythonLogger:logging.py:29 Initializing driver for browser: chrome
+[32mINFO    [0m SeleniumPythonLogger:logging.py:29 Creating WebDriver instance...
+[32mINFO    [0m SeleniumPythonLogger:logging.py:29 Applying common browser settings...
+[32mINFO    [0m SeleniumPythonLogger:logging.py:29 Start maximized
+[32mINFO    [0m SeleniumPythonLogger:logging.py:29 Applying overrides from JSON configuration...
+[32mINFO    [0m SeleniumPythonLogger:logging.py:29 Using local driver.
+[32mINFO    [0m SeleniumPythonLogger:logging.py:29 Driver for browser chrome finished successfully.
+[32mINFO    [0m SeleniumPythonLogger:logging.py:29 Driver for browser chrome quit successfully.

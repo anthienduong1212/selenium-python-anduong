@@ -1,5 +1,5 @@
 {
-  "headless": false,
+  "capabilities": { "acceptInsecureCerts": true },
   "chrome": {
     "args": ["--disable-gpu", "--window-size=1920,1080"],
     "prefs": {
@@ -7,7 +7,6 @@
       "profile.default_content_settings.popups": 0
     },
     "capabilities": {
-      "acceptInsecureCerts": true,
       "pageLoadStrategy": "normal"
     }
   },
@@ -17,7 +16,6 @@
       "download.default_directory": "C:/Downloads"
     },
     "capabilities": {
-      "acceptInsecureCerts": true
     },
     "ms:edgeOptions": {
       "excludeSwitches": ["enable-logging"]
@@ -30,7 +28,6 @@
       "browser.helperApps.neverAsk.saveToDisk": "application/pdf"
     },
     "capabilities": {
-      "acceptInsecureCerts": true
     },
     "moz:firefoxOptions": {
       "log": {"level": "trace"}
