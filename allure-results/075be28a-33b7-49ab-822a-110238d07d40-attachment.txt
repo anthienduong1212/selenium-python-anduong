@@ -7,4 +7,4 @@ Traceback (most recent call last):
     _fail(msg or "Expected condition to be True")
   File "C:\Users\baon2\IdeaProjects\Selenium_Python\selenium-python-anduong\core\assertion\assertion.py", line 22, in _fail
     raise AssertionError(msg)
-AssertionError: Hotel Address doesn't match | ACTUAL: Xuan Huong Lake, Dalat - 1.2 km to center | EXPECTED: No. 16, Trạng Trình Street, Ward 09, Da Lat City, Lâm Đồng Province, Vietnam, Xuan Huong Lake, Dalat, Vietnam, 670000
+AssertionError: Hotel Address doesn't match | ACTUAL: Dalat City Center, Dalat - City center | EXPECTED: 10 Phan Boi Chau Street, Ward 1, Dalat City, Vietnam, Dalat City Center, Dalat, Vietnam, 670000

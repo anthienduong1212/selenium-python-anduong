@@ -22,3 +22,7 @@ def contains_text(text: str, ex: str) -> bool:
     c = normalize(ex).replace(" ", "")
     Logger.debug(f"Verify {t} contains {c}")
     return c in t
+
+
+def sign_and_abs(x: int) -> tuple[str, int]:
+    return ("minus", -x) if x < 0 else (("plus", x) if x > 0 else ("zero", 0))

@@ -1,6 +1,6 @@
 [32mINFO    [0m SeleniumPythonLogger:logging.py:29 Loading config from env resources/configuration.json
-[32mINFO    [0m SeleniumPythonLogger:logging.py:29 Resolved date: 2025-11-04 22:06:31.281969+07:00
-[32mINFO    [0m SeleniumPythonLogger:logging.py:29 Resolved date: 2025-11-07 22:06:31.283014+07:00
+[32mINFO    [0m SeleniumPythonLogger:logging.py:29 Resolved date: 2025-11-09 22:32:36.591351+07:00
+[32mINFO    [0m SeleniumPythonLogger:logging.py:29 Resolved date: 2025-11-12 22:32:36.592417+07:00
 [32mINFO    [0m SeleniumPythonLogger:logging.py:29 Initializing driver for browser: chrome
 [32mINFO    [0m SeleniumPythonLogger:logging.py:29 Creating WebDriver instance...
 [32mINFO    [0m SeleniumPythonLogger:logging.py:29 Applying common browser settings...
