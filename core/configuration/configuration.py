@@ -31,30 +31,7 @@ def env_bool(key: str, default: bool) -> bool:
 
 def env_int(key: str, default: int | None) -> Optional[int]:
     raw = os.getenv(key, None if default is None else str(default))
-    try:
-        return None if raw is None else int(raw)
-    except (TypeError, ValueError):
-        return default
-
-
-def _coerce_bool(v) -> Optional[bool]:
-    if isinstance(v, bool):
-        return v
-    if v is None:
-        return None
-    s = str(v).strip().lower()
-    if s in _TRUE:
-        return True
-    if s in _FALSE:
-        return False
-    return None
-
-
-def _coerce_int(v) -> Optional[int]:
-    try:
-        return None if v is None else int(v)
-    except (TypeError, ValueError):
-        return None
+    return None if raw is None else int(raw)
 
 
 # ================================
@@ -89,7 +66,7 @@ class Configuration:
     # ================================
 
     @classmethod
-    def from_cli_file(cls, cli_path: Optional[str] = None) -> Optional[Path]:
+    def config_source_detection(cls, cli_path: Optional[str] = None) -> Optional[Path]:
         """
         Precedence:
         1) CLI --browser-config
@@ -126,9 +103,9 @@ class Configuration:
         Create Configuration and load JSON once (cache into _json_data) in order:
         CLI > ENV > package resource. Then merge JSON > defaults/ENV (if you have one).
         """
-        cfg = cls(**overrides)
+        cfg = cls()
 
-        p = cls.from_cli_file(cli_browser_config_path)
+        p = cls.config_source_detection(cli_browser_config_path)
         json_data: Dict[str, Any] = {}
 
         if p is not None:
@@ -140,15 +117,23 @@ class Configuration:
                 json_data = {}
                 Logger.error("There is no configuration load")
 
-        cfg = cls.replace(cfg, _json_data=json_data)
+        updates = {}
+        for key in cfg.to_dict().keys():
+            if key in json_data:
+                updates[key] = json_data[key]
 
-        cfg = cls.replace(cfg, browser=cfg.browser.strip().lower())
+        cfg = dc_replace(cfg, **updates)
+
+        # Create new cfg with value from parameter of from_sources, if there aren't new overrides params, do nothing
+        cfg = cfg.replace(**overrides)
+
+        cfg = cfg.replace(browser=cfg.browser.strip().lower())
         return cfg
 
     def replace(self, **overrides) -> "Configuration":
 
         merge_keys = ("extra_caps", "per_browser_remote_url")
-        merged :Dict[str, Any] = {}
+        merged: Dict[str, Any] = {}
 
         for k in merge_keys:
             if k in overrides and overrides[k] is not None:

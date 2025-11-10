@@ -1,7 +1,7 @@
 {
   "capabilities": { "acceptInsecureCerts": true },
   "chrome": {
-    "args": ["--disable-gpu", "--window-size=1920,1080"],
+    "args": ["--disable-gpu"],
     "prefs": {
       "download.default_directory": "C:/Downloads",
       "profile.default_content_settings.popups": 0
@@ -11,7 +11,7 @@
     }
   },
   "edge": {
-    "args": ["--inprivate", "--window-size=1920,1080"],
+    "args": ["--inprivate"],
     "prefs": {
       "download.default_directory": "C:/Downloads"
     },

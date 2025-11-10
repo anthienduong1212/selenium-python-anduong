@@ -1,0 +1,49 @@
+Traceback (most recent call last):
+  File "C:\Users\baon2\IdeaProjects\Selenium_Python\selenium-python-anduong\core\report\reporting.py", line 64, in step
+    yield
+  File "C:\Users\baon2\IdeaProjects\Selenium_Python\selenium-python-anduong\tests\agoda\test_booking.py", line 28, in test_homepage
+    home_page.search_for_hotel(booking)
+  File "C:\Users\baon2\IdeaProjects\Selenium_Python\selenium-python-anduong\pages\agoda\home_page.py", line 104, in search_for_hotel
+    self.click_search()
+  File "C:\Users\baon2\IdeaProjects\Selenium_Python\selenium-python-anduong\pages\agoda\home_page.py", line 95, in click_search
+    BrowserUtils.click_open_and_switch(lambda: search_button.click())
+  File "C:\Users\baon2\IdeaProjects\Selenium_Python\selenium-python-anduong\core\utils\browser_utils.py", line 109, in click_open_and_switch
+    new_h = BrowserUtils.wait_for_new_window(before)
+  File "C:\Users\baon2\IdeaProjects\Selenium_Python\selenium-python-anduong\core\utils\browser_utils.py", line 73, in wait_for_new_window
+    BrowserUtils._dw().waiter.until(
+  File "C:\Users\baon2\IdeaProjects\Selenium_Python\selenium-python-anduong\core\waiter\wait.py", line 44, in until
+    value = supplier()
+  File "C:\Users\baon2\IdeaProjects\Selenium_Python\selenium-python-anduong\core\utils\browser_utils.py", line 74, in <lambda>
+    supplier=lambda: len(set(d.window_handles) - old) >= 1,
+  File "C:\Users\baon2\IdeaProjects\Selenium_Python\selenium-python-anduong\venv\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 640, in window_handles
+    return self.execute(Command.W3C_GET_WINDOW_HANDLES)["value"]
+  File "C:\Users\baon2\IdeaProjects\Selenium_Python\selenium-python-anduong\venv\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 458, in execute
+    self.error_handler.check_response(response)
+  File "C:\Users\baon2\IdeaProjects\Selenium_Python\selenium-python-anduong\venv\lib\site-packages\selenium\webdriver\remote\errorhandler.py", line 232, in check_response
+    raise exception_class(message, screen, stacktrace)
+selenium.common.exceptions.InvalidSessionIdException: Message: invalid session id: session deleted as the browser has closed the connection
+from disconnected: not connected to DevTools
+  (Session info: chrome=142.0.7444.60); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#invalidsessionidexception
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x7ff69f817a05
+	0x7ff69f817a60
+	0x7ff69f5916ad
+	0x7ff69f57b65b
+	0x7ff69f57cb8b
+	0x7ff69f5921bf
+	0x7ff69f56881d
+	0x7ff69f624e58
+	0x7ff69f5db068
+	0x7ff69f5dbe93
+	0x7ff69fad29a0
+	0x7ff69facce20
+	0x7ff69faecc15
+	0x7ff69f83309e
+	0x7ff69f83ad8f
+	0x7ff69f820be4
+	0x7ff69f820d9f
+	0x7ff69f8067f8
+	0x7ffb69f8e8d7
+	0x7ffb6acac53c
+

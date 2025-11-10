@@ -1,6 +1,6 @@
-from abc import ABC
 from typing import Any, Dict
 import os
+import json
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.remote.webdriver import WebDriver
@@ -19,13 +19,17 @@ def _env_json_obj(key: str) -> dict | None:
 
 
 @register_provider
-class FirefoxProvider(BrowserProvider, ABC):
+class FirefoxProvider(BrowserProvider):
     name = "firefox"
     aliases = ["mozilla-firefox", "ff", "firefox"]
 
     def build_options(self) -> Any:
         opts = FirefoxOptions()
         return opts
+
+    def create_local_driver(self, options: Any) -> WebDriver:
+        Logger.info("Instantiating local Firefox WebDriver...")
+        return webdriver.Firefox(options=options)
 
     def _add_headless(self, options: FirefoxOptions):
         options.add_argument("--headless")
@@ -53,5 +57,4 @@ class FirefoxProvider(BrowserProvider, ABC):
         if isinstance(binary, dict) and binary.strip():
             options.binary_location = binary
 
-    def create_local_driver(self, options: Any) -> WebDriver:
-        return webdriver.Firefox(options)
+

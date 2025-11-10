@@ -16,7 +16,6 @@ class DriverFactory:
     def __init__(self, provider_package: str):
         discover_and_register(provider_package)
 
-
     def create_driver(self, config: Configuration) -> WebDriver:
         """
         Create driver based on configuration.

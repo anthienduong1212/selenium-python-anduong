@@ -1,11 +1,12 @@
-from abc import ABC
 from typing import Any
 import os
+import json
 from selenium import webdriver
 from selenium.webdriver.edge.options import Options as EdgeOptions
 from selenium.webdriver.remote.webdriver import WebDriver
 from core.driver.providers.browser_provider import BrowserProvider
 from core.driver.providers.registry import register_provider
+from core.logging.logging import Logger
 
 
 def _env_csv(key: str) -> list[str]:
@@ -24,33 +25,38 @@ def _env_json_obj(key: str) -> dict | None:
 
 
 @register_provider
-class EdgeProvider(BrowserProvider, ABC):
+class EdgeProvider(BrowserProvider):
     name = "edge"
     aliases = ["msedge", "microsoft-edge"]
 
     def build_options(self):
         return EdgeOptions()
 
+    def create_local_driver(self, options: Any) -> WebDriver:
+        Logger.info("Instantiating local Edge WebDriver...")
+        return webdriver.Edge(options=options)
+
     def _apply_vendor_json(self, options: EdgeOptions, block: dict) -> None:
         # Edge is Chromium-based; has "ms:edgeOptions" (vendor prefixed).
+        Logger.info("Applying vendor-specific Edge JSON overrides (ms:edgeOptions)...")
         mso = block.get("ms:edgeOptions")
         if isinstance(mso, dict):
             for a in mso.get("args", []) or []:
                 self._add_args(options, str(a))
+                Logger.debug(f"Adding Edge argument: {a}")
 
             prefs = mso.get("prefs")
             if isinstance(prefs, dict):
-                try:
-                    options.add_experimental_option("prefs", prefs)
-                except Exception:
-                    pass
+                self._set_chromium_prefs(options, prefs)
+                Logger.debug("Setting Edge preferences.")
 
             excl = mso.get("excludeSwitches")
             if isinstance(excl, list) and excl:
                 try:
                     options.add_experimental_option("excludeSwitches", excl)
+                    Logger.debug(f"Excluding Edge switches: {excl}")
                 except Exception:
+                    Logger.warning(f"Could not exclude switches: {e}")
                     pass
 
-    def create_local_driver(self, options: Any) -> WebDriver:
-        return webdriver.Edge(options)
+
