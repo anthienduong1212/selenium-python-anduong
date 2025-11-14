@@ -136,10 +136,3 @@ class Locator:
             return self
         # GIỮ parent để không mất context-find
         return Locator(self.by, self.value, desc, parent=self.parent)
-
-    # backward-compat
-    def with_decs(self, desc: str) -> "Locator":
-        return self.with_desc(desc)
-
-    def __str__(self) -> str:
-        return self.desc or f"{self.by}={self.value}"
