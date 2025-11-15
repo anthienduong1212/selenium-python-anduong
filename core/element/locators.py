@@ -64,13 +64,11 @@ class Locator:
     # ------------------ factory ----------------------------------
     @classmethod
     def by_text(cls, text: str, desc: Optional[str] = None) -> "Locator":
-        # exact text, normalize space như Selenide byText
         x = f".//*[normalize-space(.)={_xpath_literal(text)}]"
         return cls.xpath(x, desc or f'byText({text})')
 
     @classmethod
     def with_text(cls, sub: str, desc: Optional[str] = None) -> "Locator":
-        # substring, ignore whitespace like Selenide withText
         x = f".//*[contains(normalize-space(.), {_xpath_literal(sub)})]"
         return cls.xpath(x, desc or f'withText({sub})')
 
@@ -90,7 +88,6 @@ class Locator:
                 f"{p}//{c.lstrip('./')}",
                 desc or f"{self.desc or ''} > {child.desc or ''}".strip(" >")
             )
-        # context-aware: Let resolver use search context of Selenium
         return Locator(
             child.by, child.value,
             desc or f"{self.desc or ''} > {child.desc or ''}".strip(" >"),
@@ -111,5 +108,4 @@ class Locator:
     def with_desc(self, desc: Optional[str]) -> "Locator":
         if not desc:
             return self
-        # GIỮ parent để không mất context-find
         return Locator(self.by, self.value, desc, parent=self.parent)
