@@ -14,16 +14,12 @@ def _xpath_literal(s: str) -> str:
         return f"'{s}'"
     if '"' not in s:
         return f'"{s}"'
-    parts = []
-    for chunks in s.split("'"):
-        parts.append(f"'{chunks}'")
-        parts.append('"\'"')
-    parts = parts[:-1]
-    return f"concat({','.join(parts)})"
+
+    parts = [f"'{chunk}'" for chunk in s.split("'")]
+    return f"concat({', '"'\\''"', '.join(parts)})"
 
 def _css_attr_value(s: str) -> str:
-    # Simple escape for css value
-    return str(s).replace("\\", "\\\\").replace('"', '\\"')
+    return re.sub(r'[\\.#! "\[\]:]', lambda match: '\\' + match.group(0), str(s))
 
 @dataclass(frozen=True)
 class Locator:
@@ -107,28 +103,9 @@ class Locator:
         if self.by == By.XPATH:
             safe = {k: _xpath_literal(v) for k, v in kwargs.items()}
             return Locator(self.by, self.value.format(**safe), self.desc, parent=self.parent)
-        # CSS: escape để tránh vỡ selector khi có " hoặc \
-        return Locator(
-            self.by,
-            self.value.format(**{k: _css_attr_value(v) for k, v in kwargs.items()}),
-            self.desc,
-            parent=self.parent
-        )
 
     def __call__(self, **kwargs: Any) -> "Locator":
         return self.format(**kwargs)
-
-    @classmethod
-    def from_any(cls, selector: Union[str, ByTuple, "Locator"], desc: Optional[str] = None) -> "Locator":
-        if isinstance(selector, Locator):
-            return selector.with_desc(desc) if desc else selector
-        if isinstance(selector, tuple) and len(selector) == 2:
-            return cls(selector[0], selector[1], desc)
-        if isinstance(selector, str):
-            if re.match(r"^\s*(/|//|\.)", selector):
-                return cls.xpath(selector, desc)
-            return cls.css(selector, desc)
-        raise TypeError(f"Unsupported selector type: {type(selector)}")
 
     # ------------------ desc ---------------------------
     def with_desc(self, desc: Optional[str]) -> "Locator":
