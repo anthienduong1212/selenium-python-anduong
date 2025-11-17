@@ -1,9 +1,11 @@
-import os
 import json
+import os
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
 from selenium.webdriver.remote.webdriver import WebDriver
+
 from core.configuration.configuration import Configuration
 from core.logging.logging import Logger
 
@@ -23,7 +25,6 @@ class BrowserProvider(ABC):
     @abstractmethod
     def build_options(self) -> Any:
         """Return browser-specific Options instance (ChromeOptions/FirefoxOptions/EdgeOptions)."""
-        Logger.info(f"Using remote URL: {remote_url}" if remote_url else "Using local driver.")
         raise NotImplementedError
 
     def create_driver(self) -> WebDriver:
@@ -48,7 +49,6 @@ class BrowserProvider(ABC):
 
     def create_remote_driver(self, options: Any, remote_url: str) -> WebDriver:
         """Default remote creation uses webdriver.Remote(options=options)."""
-        from selenium import webdriver
         Logger.info(f"Creating remote WebDriver with URL: {remote_url}")
         return webdriver.Remote(command_executor=remote_url, options=options)
 
@@ -59,7 +59,6 @@ class BrowserProvider(ABC):
     def apply_common_settings(self, options: Any):
         Logger.info("Applying common browser settings...")
         if self.config.headless:
-            # keep browser-specific headless flag in subclass or here by convention
             Logger.info(f"Headless mode: {self.config.headless}")
             self._add_headless(options)
 
@@ -74,28 +73,26 @@ class BrowserProvider(ABC):
     #         HELPER HOOKS
     # ================================
 
-    # helper hook (subclass can override)
     def _add_headless(self, options: Any) -> None:
         """Default: Chromium flag (Firefox subclass can override)."""
         try:
             options.add_argument("--headless=new")
-        except Exception:
-            # firefox uses different flag; subclass can override
-            pass
+        except Exception as e:
+            Logger.warning(f"Could not apply headless argument: {e}")
 
     def _add_args(self, options: Any, *args: str) -> None:
         try:
             for a in args:
                 options.add_argument(a)
-        except Exception:
-            pass
+        except Exception as e:
+            Logger.warning(f"Could not apply arguments {args}: {e}")
 
     def _set_chromium_prefs(self, options: Any, prefs: Dict) -> None:
         """Default Chrome-style prefs; subclass Firefox override if needed."""
         try:
             options.add_experimental_option("prefs", prefs)
-        except Exception:
-            pass
+        except Exception as e:
+            Logger.warning(f"Could not apply arguments {args}: {e}")
 
     def _set_capabilities(self, options: Any, caps: dict) -> None:
         for k, v in (caps or {}).items():
@@ -116,41 +113,40 @@ class BrowserProvider(ABC):
         block = self.config.json_browser_block(self.config.browser)
 
         Logger.info("Applying overrides from JSON configuration...")
-        # global caps
         caps = data.get("capabilities")
         if isinstance(caps, dict):
             for k, v in caps.items():
                 try:
                     options.set_capability(k, v)
-                except Exception:
-                    pass
+                except Exception as e:
+                    Logger.warning(f"Could not set global capability {k}: {e}")
 
         # per-browser block (args/prefs/caps)
         if isinstance(block, dict):
             for a in (block.get("args") or []):
                 try:
                     options.add_argument(str(a))
-                except Exception:
-                    pass
+                except Exception as e:
+                    Logger.warning(f"Could not apply browser arg {a}: {e}")
 
         prefs = block.get("prefs")
         if isinstance(prefs, dict):
             try:
                 options.add_experimental_option("prefs", prefs)
-            except Exception:
-                pass
+            except Exception as e:
+                Logger.warning(f"Could not apply browser prefs: {e}")
 
         caps2 = block.get("capabilities")
         if isinstance(caps2, dict):
             for k, v in caps2.items():
                 try:
                     options.set_capability(k, v)
-                except Exception:
-                    pass
+                except Exception as e:
+                    Logger.warning(f"Could not set browser capability {k}: {e}")
 
         # vendor keys: goog:chromeOptions / ms:edgeOptions / moz:firefoxOptions
         self._apply_vendor_json(options, block)
 
     def _apply_vendor_json(self, options: Any, block: dict) -> None:
-        """Subclasses handle vendor keys from block (noop mặc định)."""
-        return
+        """Subclasses handle vendor keys from block"""
+

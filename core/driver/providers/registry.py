@@ -22,7 +22,8 @@ def get_provider_class(name: str):
 
 
 def discover_and_register(package: str) -> None:
-    import pkgutil, importlib
+    import importlib
+    import pkgutil
     pkg = importlib.import_module(package)
     for finder, modname, ispkg in pkgutil.iter_modules(pkg.__path__):
         importlib.import_module(f"{package}.{modname}")

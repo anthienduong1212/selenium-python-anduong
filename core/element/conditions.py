@@ -1,10 +1,14 @@
 from __future__ import annotations
+
+import re
 from dataclasses import dataclass
 from typing import Callable, Optional
+
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.remote.webelement import WebElement
 
-import re
+from core.constants.JS_scripts import JSScript
+from core.logging.logging import Logger
 
 Predicate = Callable[[WebElement], bool]
 
@@ -19,7 +23,6 @@ class Condition:
         try:
             return self.predicate(el)
         except StaleElementReferenceException:
-            # stale -> failed, let Waiter try again
             return False
 
 
@@ -102,42 +105,38 @@ def not_(cond: Condition) -> Condition:
 
 
 def in_viewport() -> Condition:
-    # element has dimension > 0 and locate in center of viewport
+    """Check if element has dimension > 0 and locate in center of viewport"""
+
     def _pred(e: WebElement) -> bool:
         try:
             drv = e.parent
-            rect = drv.execute_script("""
-                const r = arguments[0].getBoundingClientRect();
-                return {cx: Math.floor(r.left + r.width/2),
-                        cy: Math.floor(r.top  + r.height/2),
-                        w: r.width, h: r.height};
-            """, e)
+            rect = drv.execute_script(JSScript.GET_ELEMENT_RECT_SCRIPT, e)
             if rect["w"] <= 0 or rect["h"] <= 0:
                 return False
-            vw, vh = drv.execute_script(
-                "return [window.innerWidth||document.documentElement.clientWidth,"
-                "        window.innerHeight||document.documentElement.clientHeight];"
-            )
+            vw, vh = drv.execute_script(JSScript.GET_VIEWPORT_SIZE_SCRIPT)
             return 0 <= rect["cx"] < vw and 0 <= rect["cy"] < vh
         except Exception:
+            Logger.debug("Element is not located in view port")
             return False
 
     return Condition("in_viewport", _pred)
 
 
 def not_covered() -> Condition:
-    # the top element at the center is itself (or its children) → not blocked by the overlay
+    """
+    Checks if the top element at the center of the target element is the element itself
+    or one of its descendants (meaning it's not blocked by an overlay).
+    """
+
     def _pred(e: WebElement) -> bool:
         try:
             drv = e.parent
-            cx, cy = drv.execute_script("""
-                const r = arguments[0].getBoundingClientRect();
-                return [Math.floor(r.left + r.width/2), Math.floor(r.top + r.height/2)];
-            """, e)
-            top_el = drv.execute_script("return document.elementFromPoint(arguments[0], arguments[1]);", cx, cy)
-            # cùng element, hoặc element ở trên là con của e
-            return top_el == e or drv.execute_script("return arguments[0].contains(arguments[1]);", e, top_el)
+            cx, cy = drv.execute_script(JSScript.CENTER_COORDS_SCRIPT, e)
+            top_el = drv.execute_script(JSScript.TOP_EL_SCRIPT, cx, cy)
+
+            return top_el == e or drv.execute_script(JSScript.IS_DESCENDANT_SCRIPT, e, top_el)
         except Exception:
+            Logger.debug("Element no longer attached to DOM")
             return False
 
     return Condition("not_covered", _pred)

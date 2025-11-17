@@ -1,100 +1,105 @@
 from __future__ import annotations
-from typing import Any, Iterable, Mapping, Optional, Callable
-import json
 
+import json
+from typing import Any, Callable, Iterable, Mapping, Optional
+
+from core.logging.logging import Logger
 from core.report.reporting import AllureReporter
 
 # --- Optional: soft assertions via pytest-check ---
 try:
     import pytest_check as check  # pip install pytest-check
-except Exception:
+    _SOFT_ASSERT = True
+except ImportError:
     check = None
+    _SOFT_ASSERT = False
+    Logger.info("pytest-check not installed. Falling back to hard assertions (standard assert).")
 
 
 def _attach_json_allure(title: str, data: Any) -> None:
+    """Helper to attach JSON data to Allure report."""
     AllureReporter.attach_json(name=title, data=data, pretty=True)
 
 
-def _fail(msg: str) -> None:
-    if check:
-        check.is_true(False, msg)
+def _fail(msg: str, expr: bool = False) -> None:
+    """Uses pytest_check for soft assertion or standard assert for hard assertion."""
+    if _SOFT_ASSERT:
+        check.is_true(expr, msg)
     else:
-        raise AssertionError(msg)
+        assert expr, msg
 
 
 # ---------------------------
 #          HELPER
 # ---------------------------
 
+
 def assert_equal(actual: Any, expected: Any, msg: Optional[str] = None) -> None:
     """Compare equal – with optional message."""
     if actual != expected:
         _attach_json_allure("Expected vs Actual", {"expected": expected, "actual": actual})
-        _fail(msg or f"Expected == but got diff")
+        _fail(msg or f"Values are not equal. Expected: {expected!r}, Actual: {actual!r}", expr=False)
 
 
 def assert_true(expr: bool, msg: Optional[str] = None) -> None:
+    """Assert that the expression is True."""
     if not expr:
-        _fail(msg or "Expected condition to be True")
+        _fail(msg or "Expected condition to be True", expr=False)
 
 
 def assert_false(expr: bool, msg: Optional[str] = None) -> None:
+    """Assert that the expression is False."""
     if expr:
-        _fail(msg or "Expected condition to be False")
+        _fail(msg or "Expected condition to be False", expr=False)
 
 
 def assert_in(member: Any, container: Iterable[Any], msg: Optional[str] = None) -> None:
+    """Assert that the member is in the container."""
     if member not in container:
-        _attach_json_allure("Container",
-                            list(container) if not isinstance(container, (str, bytes)) else {"text": container})
-        _fail(msg or f"{member!r} not found in container")
+        container_display = list(container) if not isinstance(container, (str, bytes)) else {"text": container}
+        _attach_json_allure("Container", container_display)
+        _fail(msg or f"{member!r} not found in container", expr=False)
 
 
 def assert_not_in(member: Any, container: Iterable[Any], msg: Optional[str] = None) -> None:
+    """Assert that the member is not in the container."""
     if member in container:
-        _fail(msg or f"{member!r} unexpectedly found in container")
+        _fail(msg or f"{member!r} unexpectedly found in container", expr=False)
 
 
 def assert_len(obj: Any, expected_len: int, msg: Optional[str] = None) -> None:
-    try:
-        n = len(obj)
-    except Exception:
-        _fail(msg or "Object has no len()")
-        return
-    if n != expected_len:
-        _attach_json_allure("Length check", {"expected_len": expected_len, "actual_len": n})
-        _fail(msg or f"len(obj) == {expected_len}, got {n}")
+    """Assert that the object has the expected length."""
+    actual_len = len(obj)
+    if actual_len != expected_len:
+        _attach_json_allure("Length check", {"expected_len": expected_len, "actual_len": actual_len})
+        _fail(msg or f"Length mismatch. Expected: {expected_len}, Actual: {actual_len}", expr=False)
 
 
 def assert_between(num: float, lo: float, hi: float, inclusive: bool = True, msg: Optional[str] = None) -> None:
-    ok = (lo <= num <= hi) if inclusive else (lo < num < hi)
-    if not ok:
+    """Assert that the number is within the specified range."""
+    is_in_range = (lo <= num <= hi) if inclusive else (lo < num < hi)
+    if not is_in_range:
         _attach_json_allure("Range", {"value": num, "lo": lo, "hi": hi, "inclusive": inclusive})
-        _fail(msg or f"{num} not in range [{lo}, {hi}{']' if inclusive else ')'}]")
+        _fail(msg or f"{num} not in range [{lo}, {hi}{']' if inclusive else ')'}]", expr=False)
 
 
 def assert_json_contains(actual: Mapping[str, Any], expected_subset: Mapping[str, Any],
                          msg: Optional[str] = None) -> None:
     """Every key/value in expected_subset must be present in actual (simple deep comparison)."""
-    missing = {}
+    missing_or_diff = {}
     for k, v in expected_subset.items():
         if k not in actual or actual[k] != v:
-            missing[k] = {"expected": v, "actual": actual.get(k, "<MISSING>")}
-    if missing:
+            missing_or_diff[k] = {"expected": v, "actual": actual.get(k, "<MISSING>")}
+
+    if missing_or_diff:
         _attach_json_allure("JSON diff",
-                            {"expected_subset": expected_subset, "actual": actual, "missing_or_diff": missing})
-        _fail(msg or "JSON does not contain expected subset")
+                            {"expected_subset": expected_subset, "actual": actual, "missing_or_diff": missing_or_diff})
+        _fail(msg or "JSON does not contain expected subset", expr=False)
 
 
 def assert_raises(fn: Callable, exc: type[BaseException], msg: Optional[str] = None) -> BaseException:
     """Expect the function to throw an exception; return the exception to continue asserting the property."""
-    try:
+    with pytest.raises(exc) as exc_info:
         fn()
-    except exc as e:
-        return e
-    except Exception as e:
-        _attach_json_allure("Unexpected exception", {"type": type(e).__name__, "str": str(e)})
-        _fail(msg or f"Expected {exc.__name__}, but got {type(e).__name__}")
-    else:
-        _fail(msg or f"Expected {exc.__name__} to be raised")
-    return RuntimeError("unreachable")
+
+    return exc_info.value

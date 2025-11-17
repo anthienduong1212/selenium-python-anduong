@@ -1,7 +1,6 @@
 import json
 from pathlib import Path
-from typing import Dict, List, Tuple, Callable, Any, TypeVar
-from typing import Type, TypeVar, Callable, Any
+from typing import Any, Callable, Dict, List, Tuple, Type, TypeVar
 
 T = TypeVar("T")
 

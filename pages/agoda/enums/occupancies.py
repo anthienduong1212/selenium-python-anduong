@@ -4,6 +4,7 @@ except ImportError:
     from strenum import StrEnum
 
 from typing import Dict, List, Tuple
+
 from core.utils.json_utils import convert_dict_to_pairs
 
 

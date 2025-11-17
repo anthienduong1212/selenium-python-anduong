@@ -1,16 +1,17 @@
 from __future__ import annotations
-from typing import Iterable, Callable, Optional
-import re
 
-from selenium.webdriver.support.ui import WebDriverWait
+import re
+from typing import Callable, Iterable, Optional
+
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
 from core.configuration.configuration import Configuration
-from core.driver.driver_manager import DriverManager
 from core.driver.driver_conditions import DriverCondition
-from core.waiter.wait import Waiter
-from core.report.reporting import AllureReporter
+from core.driver.driver_manager import DriverManager
 from core.driver.driver_wait import DriverWait
+from core.report.reporting import AllureReporter
+from core.waiter.wait import Waiter
 
 
 class BrowserUtils:
@@ -49,8 +50,7 @@ class BrowserUtils:
         with AllureReporter.step(desc):
             BrowserUtils._dw().waiter.until(
                 supplier=lambda: d.execute_script("return document.readyState") == "complete",
-                on_timeout=lambda: f"{desc}. url={getattr(d,'current_url',None)} title={getattr(d,'title',None)}",
-                take_screenshot=lambda p: d.save_screenshot(p),
+                on_timeout=lambda: f"{desc}. url={getattr(d,'current_url',None)} title={getattr(d,'title',None)}"
             )
 
     @staticmethod
@@ -72,8 +72,7 @@ class BrowserUtils:
         with AllureReporter.step(desc):
             BrowserUtils._dw().waiter.until(
                 supplier=lambda: len(set(d.window_handles) - old) >= 1,
-                on_timeout=lambda: f"{desc}. current_handles={d.window_handles}",
-                take_screenshot=lambda p: d.save_screenshot(p),
+                on_timeout=lambda: f"{desc}. current_handles={d.window_handles}"
             )
         return list(set(d.window_handles) - old)[0]
 

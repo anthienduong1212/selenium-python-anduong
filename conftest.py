@@ -1,20 +1,20 @@
-import re
-import pytest
 import os
+import re
 
+import pytest
 from dotenv import load_dotenv
+
 load_dotenv()
+
+from pytest import Config
 
 from core.configuration.configuration import Configuration
 from core.driver.driver_manager import DriverManager
+from core.logging.logging import Logger
 from core.report.reporting import AllureReporter
 from core.utils.json_utils import load_json_as
 from tests.data.booking_data import BookingData
 from tests.data.resolve_booking_date import resolve_booking_date
-from pytest import Config
-
-from core.logging.logging import Logger
-Logger.setup_logging()
 
 
 def pytest_addoption(parser):

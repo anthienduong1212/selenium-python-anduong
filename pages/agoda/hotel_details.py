@@ -1,9 +1,11 @@
-from typing import Tuple, Dict, Any
-from pages.base_page import BasePage
+from typing import Any, Dict, Tuple
+
+from core.element.conditions import Condition
+from core.element.conditions import visible as cond_visible
 from core.element.locators import Locator
 from core.utils.browser_utils import BrowserUtils
 from pages.agoda.enums.detailed_navbar_options import NavbarOptions
-from core.element.conditions import Condition, visible as cond_visible
+from pages.base_page import BasePage
 
 
 class HotelDetails(BasePage):

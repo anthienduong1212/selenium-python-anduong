@@ -1,9 +1,10 @@
 import json
 import os
+from typing import Any
+
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.remote.webdriver import WebDriver
-from typing import Any
 
 from core.driver.providers.browser_provider import BrowserProvider
 from core.driver.providers.registry import register_provider

@@ -1,11 +1,14 @@
 from __future__ import annotations
+
+import locale
 import os
 import re
-import locale
 from datetime import date, datetime, timedelta
-from zoneinfo import ZoneInfo
 from typing import Dict
-from dateutil.relativedelta import relativedelta, MO, TU, WE, TH, FR, SA, SU
+from zoneinfo import ZoneInfo
+
+from dateutil.relativedelta import FR, MO, SA, SU, TH, TU, WE, relativedelta
+
 from core.logging.logging import Logger
 
 locale.setlocale(locale.LC_TIME, os.getenv("LOCALE"))

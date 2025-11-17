@@ -1,12 +1,11 @@
-from pages.base_page import BasePage
-from core.element.locators import Locator
-from core.element.custom_controls import Calendar, CalendarConfig
-from core.utils.browser_utils import BrowserUtils
 from core.element.conditions import visible as cond_visible
+from core.element.custom_controls import Calendar, CalendarConfig
+from core.element.locators import Locator
+from core.utils.browser_utils import BrowserUtils
 from core.utils.datetime_utils import parse_strict
 from core.utils.string_utils import sign_and_abs
-
 from pages.agoda.enums.occupancies import OccupancyType
+from pages.base_page import BasePage
 from tests.data.booking_data import BookingData
 
 
@@ -20,7 +19,7 @@ class HomePage(BasePage):
                                          desc="HOME_PAGE Auto suggest")
 
     # Date Picker
-    CALD_DATEPICKER = '//div[@id="DatePicker__AccessibleV2"]'
+    CALD_DATEPICKER = Locator.xpath('//div[@id="DatePicker__AccessibleV2"]', "HOME_PAGE Calendar")
     CALD_DATEPICKER_DATE = Locator.xpath('//span[@data-selenium-date={date}]', desc="HOME_PAGE Date Picker")
     CALD_DATEPICKER_NEXT = Locator.xpath("//button[@data-selenium='calendar-next-month-button']",
         desc="HOME_PAGE Next Month Button")

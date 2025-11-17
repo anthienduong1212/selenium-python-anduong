@@ -1,12 +1,16 @@
 from __future__ import annotations
-from pages.base_page import BasePage
-from core.element.locators import Locator
-from selenium.webdriver.common.by import By
-from core.utils.browser_utils import BrowserUtils
-from core.utils.string_utils import contains_text
-from core.element.conditions import Condition, visible as cond_visible
-from core.utils.datetime_utils import parse_strict
+
 from typing import Tuple
+
+from selenium.webdriver.common.by import By
+
+from core.element.conditions import Condition
+from core.element.conditions import visible as cond_visible
+from core.element.locators import Locator
+from core.utils.browser_utils import BrowserUtils
+from core.utils.datetime_utils import parse_strict
+from core.utils.string_utils import contains_text
+from pages.base_page import BasePage
 
 
 class ResultPage(BasePage):
@@ -57,6 +61,13 @@ class ResultPage(BasePage):
         return list(hotel_data_list)
 
     def get_missing_data(self, hotel_data: Tuple[Dict[str, Any], ...], city: str) -> Tuple[List[int], List[Tuple[int, str]]]:
+        """
+        Get the list of data and extract which data fields is missing
+        :param hotel_data: List of hotel data
+        :param city: matching term
+        :return: List of hotel which is missing their information
+        """
+
         mismatched_cities: List[Tuple[int, str]] = []
         empty_names: List[int] = []
 
@@ -79,6 +90,7 @@ class ResultPage(BasePage):
         child.click()
 
     def select_first_hotel(self):
+        """Select first hotel in search result"""
         hotel = self.els(self.LI_HOTEL_INFORMATION).get(0)
         BrowserUtils.force_same_tab_link()
         hotel.click()

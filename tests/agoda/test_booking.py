@@ -1,14 +1,14 @@
 import os
 
+from core.assertion.assertion import assert_equal, assert_false, assert_true
+from core.report.reporting import AllureReporter as AR
+from core.utils.string_utils import contains_text
+from pages.agoda.enums.detailed_navbar_options import NavbarOptions
+from pages.agoda.enums.occupancies import OccupancyType
 from pages.agoda.home_page import HomePage
-from pages.agoda.result_page import ResultPage
 from pages.agoda.hotel_details import HotelDetails
 from pages.agoda.login_page import LoginPage
-from pages.agoda.enums.occupancies import OccupancyType
-from pages.agoda.enums.detailed_navbar_options import NavbarOptions
-from core.report.reporting import AllureReporter as AR
-from core.assertion.assertion import assert_equal, assert_true, assert_false
-from core.utils.string_utils import contains_text
+from pages.agoda.result_page import ResultPage
 
 BASE_URL = os.getenv("BASE_URL")
 

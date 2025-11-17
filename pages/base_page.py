@@ -1,7 +1,8 @@
 from __future__ import annotations
-from core.element.elements import Element, Elements
+
 from core.configuration.configuration import Configuration
 from core.driver.driver_manager import DriverManager
+from core.element.elements import Element, Elements
 
 
 class BasePage:
@@ -14,11 +15,11 @@ class BasePage:
         self.config = DriverManager.get_current_config()
         self.driver = DriverManager.get_driver(self.config)
 
-    def el(self, selector, name: str | None = None):
-        return Element(selector, config=self.config, name=name)
+    def el(self, selector):
+        return Element(selector, config=self.config)
 
-    def els(self, selector, name: str| None = None):
-        return Elements(selector, config=self.config, name=name)
+    def els(self, selector):
+        return Elements(selector, config=self.config)
 
     def open(self, url: str):
         self.driver.get(url)

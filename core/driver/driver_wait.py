@@ -1,9 +1,10 @@
 from __future__ import annotations
-from core.waiter.wait import Waiter
+
 from core.configuration.configuration import Configuration
-from core.driver.driver_manager import DriverManager
 from core.driver.driver_conditions import DriverCondition
+from core.driver.driver_manager import DriverManager
 from core.report.reporting import AllureReporter
+from core.waiter.wait import Waiter
 
 
 class DriverWait:
@@ -37,7 +38,7 @@ class DriverWait:
 
         with AllureReporter.step(desc):
             try:
-                self.waiter.until(_supplier, _on_timeout, lambda p: d.save_screenshot(p))
+                self.waiter.until(_supplier, _on_timeout)
             except Exception as e:
                 AllureReporter.attach_text("driver.url", getattr(d, "current_url", ""))
                 AllureReporter.attach_text("driver.title", getattr(d, "title", ""))

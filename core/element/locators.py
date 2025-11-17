@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Tuple, Union, Optional, Any   # + Any
+from typing import Any, Optional, Tuple, Union  # + Any
+
 from selenium.webdriver.common.by import By
 
 ByTuple = Tuple[str, str]
@@ -16,7 +17,9 @@ def _xpath_literal(s: str) -> str:
         return f'"{s}"'
 
     parts = [f"'{chunk}'" for chunk in s.split("'")]
-    return f"concat({', '"'\\''"', '.join(parts)})"
+    separator = ", \"'\""
+
+    return f"concat({separator.join(parts)})"
 
 def _css_attr_value(s: str) -> str:
     return re.sub(r'[\\.#! "\[\]:]', lambda match: '\\' + match.group(0), str(s))

@@ -1,11 +1,15 @@
 from __future__ import annotations
-import os, re
-from datetime import timedelta, datetime, timezone
-from typing import Optional, Tuple, List
+
+import os
+import re
+from datetime import datetime, timedelta, timezone
+from typing import List, Optional, Tuple
+
 import mailslurp_client
 from mailslurp_client import ApiClient, Configuration
 from mailslurp_client.api.inbox_controller_api import InboxControllerApi
 from mailslurp_client.models import CreateInboxDto
+
 from core.driver.driver_manager import DriverManager
 
 DEFAULT_TIMEOUT_MS = int(os.getenv("MAILSLURP_TIMEOUT_MS", "60000"))

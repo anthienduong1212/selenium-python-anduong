@@ -1,7 +1,9 @@
 from __future__ import annotations
+
+import re
 from dataclasses import dataclass
 from typing import Callable
-import re
+
 from selenium.webdriver.remote.webdriver import WebDriver
 
 

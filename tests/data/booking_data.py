@@ -1,6 +1,8 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Dict, Tuple
+
 from pages.agoda.enums.occupancies import OccupancyType, pairs_from_dict
 
 

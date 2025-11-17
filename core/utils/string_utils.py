@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 import unicodedata
+
 from core.logging.logging import Logger
 
 

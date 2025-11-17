@@ -1,10 +1,13 @@
-from typing import Any, Dict
-import os
 import json
+import os
+from typing import Any, Dict
+
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.remote.webdriver import WebDriver
+
 from core.driver.providers.browser_provider import BrowserProvider
+from core.logging.logging import Logger
 from core.driver.providers.registry import register_provider
 
 

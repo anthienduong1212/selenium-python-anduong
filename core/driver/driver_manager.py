@@ -1,24 +1,28 @@
 from __future__ import annotations
-import threading
+
 import atexit
 import os
+import sys
+import threading
 from contextvars import ContextVar
-from dataclasses import dataclass
-from typing import Optional, Dict, Tuple, Any, Callable
+from dataclasses import dataclass, field
+from typing import Any, Callable, Dict, Optional, Tuple, Type
 
+from selenium.common.exceptions import (InvalidArgumentException,
+                                        NoSuchWindowException,
+                                        TimeoutException, WebDriverException)
 from selenium.webdriver.remote.webdriver import WebDriver
-from core.configuration.configuration import Configuration
-from core.driver.driver_factory import DriverFactory
-from core.report.reporting import AllureReporter
 
-try:
-    import allure
-except Exception:
-    allure = None
+from core.configuration.configuration import Configuration
+from core.constants.constants import Constants
+from core.driver.driver_factory import DriverFactory
+from core.logging.logging import Logger
+from core.report.reporting import AllureReporter
 
 
 @dataclass
 class _DriverRecord:
+    """Dataclass to hold the WebDriver instance and its configuration."""
     driver: WebDriver
     config: Configuration
 
@@ -33,15 +37,14 @@ class DriverManager:
         - cleanup_all(): close all drivers that are still held (when atexit).
     """
 
-    #  key = (process_id, worker_id, thread_id, context_id) -> _DriverRecord
-    _REGISTRY: Dict[Tuple[int, str, int, int], _DriverRecord] = {}
+    #  key = (process_id, thread_id, context_id) -> _DriverRecord
+    _REGISTRY: Dict[Tuple[int, int, int], _DriverRecord] = {}
     _LOCK = threading.RLock()
 
-    # context var to distinguish async context if used (future safe)
-    _CTX_ID: ContextVar[int] = ContextVar("_ctx_id", default=0)
-    _NEXT_CTX_ID = 1
+    _ctx_id: ContextVar[int] = ContextVar("_ctx_id", default=0)
+    _next_ctx_id: int = 1
 
-    _DEFAULT_PROVIDER_PACKAGE = os.getenv("BROWSER_PROVIDER", "core.providers")
+    _DEFAULT_PROVIDER_PACKAGE = Constants.BROWSER_PROVIDER
 
     # ______ public API _________
     @classmethod
@@ -51,20 +54,18 @@ class DriverManager:
         Prioritize live drivers; create a new one if dead.
         """
         cfg = cfg or Configuration()
-
         key = cls._current_key()
+
         with cls._LOCK:
             rec = cls._REGISTRY.get(key)
             if rec and cls._is_alive(rec.driver):
                 return rec.driver
-
             if rec:
                 cls._safe_quit(rec.driver)
                 cls._REGISTRY.pop(key, None)
 
             driver = cls._create_driver(cfg)
             cls._post_create_setup(driver, cfg)
-
             cls._REGISTRY[key] = _DriverRecord(driver=driver, config=cfg)
             return driver
 
@@ -105,40 +106,39 @@ class DriverManager:
         """
         Create driver via DriverFactory (discovered providers).
         Support JSON file to configure default browsers.
-        :param cfg:
-        :return WebDriver:
+        :param cfg: Configuration
+        :return WebDriver: WebDriver created from factory
         """
         factory = DriverFactory(provider_package=cls._DEFAULT_PROVIDER_PACKAGE)
         driver = factory.create_driver(cfg)
         return driver
 
     @classmethod
-    def _current_key(cls) -> Tuple[int, str, int, int]:
+    def _current_key(cls) -> Tuple[int, int, int]:
         """
         Generate distinguishing key by:
         - Process PID (each xdist worker is a process)
-        - worker id (PYTEST_XDIST_WORKER), fallback 'main'
         - thread id (each xdist test runs in its own thread)
         - context id (if using contextvars)
         """
         pid = os.getpid()
-        worker = os.getenv("PYTEST_XDIST_WORKER", "main")
         tid = threading.get_ident()
-        ctx = cls._CTX_ID.get()
-        return pid, worker, tid, ctx
+        ctx = cls._ctx_id.get()
+        return pid, tid, ctx
 
     @classmethod
     def new_context(cls) -> int:
         """Create new context id; using when need to have more than 1 driver in a thread."""
-        new_id = cls._NEXT_CTX_ID
-        cls._NEXT_CTX_ID += 1
-        cls._CTX_ID.set(new_id)  # ContextVar.set(...)
+        with cls._LOCK:
+            new_id = cls._next_ctx_id
+            cls._next_ctx_id += 1
+            cls._ctx_id.set(new_id)
         return new_id
 
     @classmethod
     def reset_context(cls) -> None:
-        """Reset context to 0."""
-        cls._CTX_ID.value = 0
+        """Reset context to 0"""
+        cls._ctx_id.set(0)
 
     @classmethod
     def _is_alive(cls, driver: WebDriver) -> bool:
@@ -157,10 +157,12 @@ class DriverManager:
         """Safe quit + attach Allure if possible"""
         try:
             AllureReporter.attach_page_screenshot(driver, name="Final Screenshot")
-        except Exception:
-            # swallow quit error so as not to ruin teardown
-            pass
-        driver.quit()
+        except Exception as e:
+            Logger.error(f"Error when capturing Allure screenshot: {e}")
+        try:
+            driver.quit()
+        except Exception as e:
+            Logger.debug(f"Error when closing driver: {e}")
 
     @classmethod
     def _post_create_setup(cls, driver: WebDriver, cfg: Configuration) -> None:
@@ -177,15 +179,15 @@ class DriverManager:
                 h = getattr(cfg, "window_height", None)
                 if w and h:
                     driver.set_window_size(int(w), int(h))
-        except Exception:
-            pass
+        except (NoSuchWindowException, WebDriverException) as e:
+            Logger.error(f"Error when settings windows size: {e}")
 
         try:
             pl_ms = getattr(cfg, "page_load_timeout_ms", None)
             if pl_ms and hasattr(driver, "set_page_load_timeout"):
                 driver.set_page_load_timeout(max(0.0, pl_ms / 1000.0))
-        except Exception:
-            pass
+        except TimeoutException as e:
+            Logger.error(f"Error when settings page load timeout: {e}")
 
 
 # Register cleanup when program end

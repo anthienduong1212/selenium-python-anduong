@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from typing import Callable, Optional, Sequence
 from datetime import datetime
 from functools import partial
+from typing import Callable, Optional, Sequence
 
-from core.element.locators import Locator
+from core.element.conditions import clickable as cond_clickable
+from core.element.conditions import visible as cond_visible
 from core.element.elements import Element
-from core.element.conditions import visible as cond_visible, clickable as cond_clickable
+from core.element.locators import Locator
 from core.utils.datetime_utils import parse_strict
 
 
@@ -56,6 +57,9 @@ class Calendar:
         containers = root.all(self.cfg.month_containers).should_have_size(2)
 
         captions = []
+        if containers is None:
+            return []
+
         for i in range(containers.size()):
             month = containers.get(i).find(self.cfg.month_caption_in_container).should(cond_visible())
             captions.append(month.text().strip())

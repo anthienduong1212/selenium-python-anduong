@@ -1,9 +1,11 @@
-from typing import Any
-import os
 import json
+import os
+from typing import Any
+
 from selenium import webdriver
 from selenium.webdriver.edge.options import Options as EdgeOptions
 from selenium.webdriver.remote.webdriver import WebDriver
+
 from core.driver.providers.browser_provider import BrowserProvider
 from core.driver.providers.registry import register_provider
 from core.logging.logging import Logger

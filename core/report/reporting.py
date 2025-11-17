@@ -1,17 +1,27 @@
 from __future__ import annotations
-import os, json, traceback
+
+import json
+import os
+import traceback
 from contextlib import contextmanager
-from typing import Optional
 from pathlib import Path
-from allure_commons.types import AttachmentType, ParameterMode
 from tempfile import NamedTemporaryFile
+from typing import Iterable, Optional
+
+from allure_commons.types import AttachmentType, ParameterMode
+
+from core.logging.logging import Logger
 
 try:
     import allure
-except Exception:
+
+    _ATTACHMENT_TYPE = AttachmentType
+    _PARAMETER_MODE = ParameterMode
+except ImportError:
     class _NoAllure:
+        """Mock class to provide no-op functions when allure is not installed."""
+
         def __getattr__(self, _):
-            # Return No-op func if attribute is not existed, avoid exception if Allure absent
             return lambda *a, **k: None
 
         class AttachmentType:
@@ -41,6 +51,17 @@ except Exception:
 
 
     allure = _NoAllure()
+    _ATTACHMENT_TYPE = allure.AttachmentType
+    _PARAMETER_MODE = allure.ParameterMode
+
+
+def safe_str(x: Any) -> str:
+    """Safely convert any object to string."""
+    try:
+        return str(x)
+    except Exception as e:
+        Logger.error(f"Error converting to string: {traceback.format_exc()}")
+        return ""
 
 
 class AllureReporter:
@@ -57,7 +78,7 @@ class AllureReporter:
     # =========================
     @staticmethod
     @contextmanager
-    def step(title: str, driver=None, included_context: bool = True):
+    def step(title: str, driver=None,  include_context: bool = True):
         """Use as: with AllureReporter.step('Search hotel'): block..."""
         with allure.step(title):
             try:
@@ -68,11 +89,11 @@ class AllureReporter:
                     if include_context:
                         AllureReporter.attach_text("URL", safe_str(getattr(driver, "current_url", "")))
                         AllureReporter.attach_text("Title", safe_str(getattr(driver, "title", "")))
-                        # console logs (if supported)
                         try:
                             logs = getattr(driver, "get_log", lambda *_: [])("browser")
                             AllureReporter.attach_json("Console logs", logs)
-                        except Exception:
+                        except Exception as e:
+                            Logger.error(f"Could not get browser logs: {e}")
                             pass
                 AllureReporter.attach_text("Exception", traceback.format_exc())
                 raise
@@ -100,7 +121,6 @@ class AllureReporter:
     @staticmethod
     def attach_file(path: str | Path, name: Optional[str] = None,
                     attachment_type: Any = None, extension: Optional[str] = None):
-        # Allure accepts attachment_type or extension for correct preview
         path = Path(path)
         allure.attach.file(str(path), name=name or path.name,
                            attachment_type=attachment_type, extension=extension)
@@ -112,24 +132,24 @@ class AllureReporter:
     def attach_page_screenshot(driver, name: str = "Page Screenshot"):
         """Take a full screenshot of the current page (PNG) and attach it (no need to write the file)."""
         try:
-            png = driver.get_screenshot_as_png()  # Selenium API
+            png = driver.get_screenshot_as_png()
             allure.attach(png, name=name, attachment_type=allure.attachment_type.PNG)
-        except Exception as _:
+        except Exception as e:
+            Logger.error(f"Could not take page screenshot: {e}")
             pass
 
     @staticmethod
     def attach_element_screenshot(element, name: str = "Element Screenshot"):
         try:
-            # Element API: screenshot_as_png OR screenshot("file")
             png = getattr(element, "screenshot_as_png", None)
             if png is None:
-                # fallback: write to temp file via element.screenshot(...)
                 with NamedTemporaryFile(suffix=".png", delete=False) as tmp:
                     element.screenshot(tmp.name)
                     AllureReporter.attach_file(tmp.name, name=name, attachment_type=AttachmentType.PNG)
             else:
                 allure.attach(png, name=name, attachment_type=AttachmentType.PNG)
-        except Exception:
+        except Exception as e:
+            Logger.error(f"Could not take element screenshot: {e}")
             pass
 
     # =========================
@@ -180,7 +200,7 @@ class AllureReporter:
     def add_parameters(params: Dict[str, Any], mask_keys: Iterable[str] = ()):
         masked = set(mask_keys or ())
         for k, v in (params or {}).items():
-            mode = ParameterMode.MASKED if k in masked else ParameterMode.DEFAULT
+            mode = _PARAMETER_MODE.MASKED if k in masked else _PARAMETER_MODE.DEFAULT
             allure.dynamic.parameter(k, str(v) if v is not None else "", mode=mode)
 
     # =========================
@@ -193,10 +213,3 @@ class AllureReporter:
         results.mkdir(parents=True, exist_ok=True)
         lines = [f"{k} = {v}" for k, v in (props or {}).items()]
         (results / "environment.properties").write_text("\n".join(lines), encoding="utf-8")
-
-
-def safe_str(x: Any) -> str:
-    try:
-        return str(x)
-    except Exception:
-        return ""
