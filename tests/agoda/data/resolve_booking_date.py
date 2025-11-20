@@ -3,7 +3,7 @@ from __future__ import annotations
 from zoneinfo import ZoneInfo
 
 from core.utils.datetime_utils import DEFAULT_TZ, resolve_date_field
-from tests.data.booking_data import BookingData
+from tests.agoda.data.booking_data import BookingData
 
 
 def resolve_booking_date(booking: BookingData, *, tz: ZoneInfo = DEFAULT_TZ) -> BookingData:

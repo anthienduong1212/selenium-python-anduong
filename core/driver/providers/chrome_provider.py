@@ -11,20 +11,6 @@ from core.driver.providers.registry import register_provider
 from core.logging.logging import Logger
 
 
-def _env_csv(key: str) -> list[str]:
-    v = os.getenv(key, "")
-    return [x.strip() for x in v.split(",") if x.strip()]
-
-
-def _env_json_obj(key: str) -> dict | None:
-    raw = os.getenv(key)
-    if not raw: return None
-    try:
-        v = json.loads(raw)
-        return v if isinstance(v, dict) else None
-    except Exception:
-        return None
-
 @register_provider
 class ChromeProvider(BrowserProvider):
     name = "chrome"

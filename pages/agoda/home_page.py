@@ -2,11 +2,10 @@ from core.element.conditions import visible as cond_visible
 from core.element.custom_controls import Calendar, CalendarConfig
 from core.element.locators import Locator
 from core.utils.browser_utils import BrowserUtils
-from core.utils.datetime_utils import parse_strict
 from core.utils.string_utils import sign_and_abs
 from pages.agoda.enums.occupancies import OccupancyType
 from pages.base_page import BasePage
-from tests.data.booking_data import BookingData
+from tests.agoda.data.booking_data import BookingData
 
 
 class HomePage(BasePage):

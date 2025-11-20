@@ -12,9 +12,6 @@ from core.configuration.configuration import Configuration
 from core.driver.driver_manager import DriverManager
 from core.logging.logging import Logger
 from core.report.reporting import AllureReporter
-from core.utils.json_utils import load_json_as
-from tests.data.booking_data import BookingData
-from tests.data.resolve_booking_date import resolve_booking_date
 
 
 def pytest_addoption(parser):
@@ -79,30 +76,18 @@ def _resolve_browser_cli(config: Config) -> list[str]:
         Logger.error(f"Error resolving browser CLI options: {e}")
         raise
 
-
 # ================================
-#          TEST DATA
+#          COMMON FIXTURES
 # ================================
-BOOKING_JSON = os.getenv("BOOKING_JSON", "resources/agoda/data.json")
-
-
-@pytest.fixture(scope="module")
-def booking() -> BookingData:
-    raw = load_json_as(BOOKING_JSON, BookingData.from_dict)
-    return resolve_booking_date(raw)
 
 
 def pytest_generate_tests(metafunc):
-    global ids
     if "browser_name" not in metafunc.fixturenames:
         return
     mode = metafunc.config.getoption("parallel_mode")
     if mode != "per-test":
-        # per-test/none: DON'T parameterize here
         return
     browsers = _resolve_browser_cli(metafunc.config)
-    # Assign mark xdist_group by browser name to gather by worker when using --dist=loadgroup
-    # If b is browser name in list, mark this test name = browser
     params = [
         pytest.param(b, marks=pytest.mark.xdist_group(name=b))
         for b in browsers
@@ -112,17 +97,18 @@ def pytest_generate_tests(metafunc):
 
 @pytest.fixture(scope="session")
 def cfg(pytestconfig):
+    """Fixture provides a global configuration object for the entire session."""
     cli_path = pytestconfig.getoption("--browser-config")
     return Configuration.from_sources(cli_browser_config_path=cli_path)
 
+
 @pytest.fixture(scope="session")
 def browser_name(request, worker_id):
+    """Determine browser name based on CLI options and parallel mode."""
     mode = request.config.getoption("parallel_mode")
     if mode == "per-test":
-        # return value from parameterize
         return request.param
 
-    # if mode is "per-worker" or none
     browsers = _resolve_browser_cli(request.config)
     if mode == "per-worker":
         m = re.search(r"\d+", worker_id or "")
@@ -160,17 +146,10 @@ def driver(request, browser_name, cfg) -> object:
 @pytest.fixture(scope="session", autouse=True)
 def _allure_env():
     AllureReporter.write_environment({
-        "env": os.getenv("TEST_ENV", "local"),
-        "browser": os.getenv("BROWSER", "chrome"),
-        "base_url": os.getenv("BASE_URL", "https://www.agoda.com"),
+        "env": os.getenv("TEST_ENV"),
+        "browser": os.getenv("BROWSER"),
+        "base_url": os.getenv("BASE_URL"),
     })
-
-
-# @pytest.fixture()
-# def otp_mailbox():
-#     ms = SlurpMailUtil(api_key=os.getenv("MAILSLURP_API_KEY"))
-#     inbox_id, email_addr = ms.create_inbox(expires_in_minutes=30)
-#     yield {"ms": ms, "inbox_id": inbox_id, "email": email_addr}
 
 
 @pytest.hookimpl(hookwrapper=True, tryfirst=True)

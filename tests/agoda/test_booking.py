@@ -1,4 +1,5 @@
 import os
+import pytest
 
 from core.assertion.assertion import assert_equal, assert_false, assert_true
 from core.report.reporting import AllureReporter as AR
@@ -13,7 +14,8 @@ from pages.agoda.result_page import ResultPage
 BASE_URL = os.getenv("BASE_URL")
 
 
-def test_homepage(driver, booking):
+@pytest.mark.usefixtures("driver")
+def test_homepage(booking_data):
     home_page = HomePage()
     result_page = ResultPage()
     hotel_detail_page = HotelDetails()
@@ -24,18 +26,18 @@ def test_homepage(driver, booking):
         home_page.open(BASE_URL)
         AR.attach_text("URL", BASE_URL)
 
-    with AR.step(f"Search for hotel in {booking.destination}"):
-        home_page.search_for_hotel(booking)
+    with AR.step(f"Search for hotel in {booking_data.destination}"):
+        home_page.search_for_hotel(booking_data)
 
-    with AR.step(f"Verify that Search Result is displayed correctly with first 5 hotels ({booking.destination})"):
-        hotel_list_infor = result_page.get_top_n_hotels(5, booking.destination)
-        empty_names, mismatches = result_page.get_missing_data(hotel_list_infor, booking.destination)
+    with AR.step(f"Verify that Search Result is displayed correctly with first 5 hotels ({booking_data.destination})"):
+        hotel_list_infor = result_page.get_top_n_hotels(5, booking_data.destination)
+        empty_names, mismatches = result_page.get_missing_data(hotel_list_infor, booking_data.destination)
         assert_false(empty_names, f"Missing name hotel at index: {empty_names}")
         assert_false(mismatches, f"Hotel with mismatched city at: {mismatches}")
 
     with (AR.step(f"Filter the hotels with breakfast included and select the first hotel")):
         result_page.search_filter_with_term("RoomOffers", "Breakfast included")
-        first_hotel_infor = result_page.get_top_n_hotels(1, booking.destination)[0]
+        first_hotel_infor = result_page.get_top_n_hotels(1, booking_data.destination)[0]
         result_page.select_first_hotel()
 
     with AR.step(f"Verify that the hotel detailed page is displayed with correct info"):

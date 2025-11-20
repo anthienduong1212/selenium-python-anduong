@@ -11,16 +11,6 @@ from core.logging.logging import Logger
 from core.driver.providers.registry import register_provider
 
 
-def _env_json_obj(key: str) -> dict | None:
-    raw = os.getenv(key)
-    if not raw: return None
-    try:
-        v = json.loads(raw)
-        return v if isinstance(v, dict) else None
-    except Exception:
-        return None
-
-
 @register_provider
 class FirefoxProvider(BrowserProvider):
     name = "firefox"
