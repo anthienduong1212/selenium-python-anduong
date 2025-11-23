@@ -9,6 +9,7 @@ from tempfile import NamedTemporaryFile
 from typing import Iterable, Optional
 
 from allure_commons.types import AttachmentType, ParameterMode
+from selenium.webdriver.remote.webdriver import WebElement
 
 from core.logging.logging import Logger
 
@@ -78,12 +79,14 @@ class AllureReporter:
     # =========================
     @staticmethod
     @contextmanager
-    def step(title: str, driver=None,  include_context: bool = True):
+    def step(title: str, include_context: bool = True):
         """Use as: with AllureReporter.step('Search hotel'): block..."""
         with allure.step(title):
             try:
                 yield
             except Exception:
+                from core.driver.driver_manager import DriverManager
+                driver = DriverManager.get_current_driver()
                 if driver is not None:
                     AllureReporter.attach_page_screenshot(driver)
                     if include_context:
@@ -139,18 +142,23 @@ class AllureReporter:
             pass
 
     @staticmethod
-    def attach_element_screenshot(element, name: str = "Element Screenshot"):
+    def attach_element_screenshot(element: WebElement, name: str = "Element Screenshot"):
         try:
             png = getattr(element, "screenshot_as_png", None)
-            if png is None:
-                with NamedTemporaryFile(suffix=".png", delete=False) as tmp:
-                    element.screenshot(tmp.name)
-                    AllureReporter.attach_file(tmp.name, name=name, attachment_type=AttachmentType.PNG)
-            else:
-                allure.attach(png, name=name, attachment_type=AttachmentType.PNG)
+            AllureReporter.attach_file(png, name=name, attachment_type=AttachmentType.PNG)
         except Exception as e:
             Logger.error(f"Could not take element screenshot: {e}")
-            pass
+
+    @staticmethod
+    def capture_and_attach_screenshot(element):
+        """Manage highlight streams, capture photos, and clean up styles."""
+        try:
+            element.highlight()
+            el = element.resolve()
+            AllureReporter.attach_element_screenshot(el)
+            element.highlight(style="", duration_ms=0, undo=True)
+        except Exception as e:
+            logging.warning(f"Could not capture or highlight element for screenshot: {e}")
 
     # =========================
     #  METADATA (dynamic)

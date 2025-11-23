@@ -5,9 +5,11 @@ from typing import Callable, Iterable, Optional
 
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-
 from core.configuration.configuration import Configuration
-from core.driver.driver_conditions import DriverCondition
+from core.driver.driver_conditions import (
+    document_ready_state_complete,
+    new_window_appeared,
+    get_new_window_handle)
 from core.driver.driver_manager import DriverManager
 from core.driver.driver_wait import DriverWait
 from core.report.reporting import AllureReporter
@@ -24,17 +26,10 @@ class BrowserUtils:
         return DriverManager.get_current_config()
 
     @staticmethod
-    def _dw() -> DriverWait:
+    def _waiter() -> Waiter:
         cfg = BrowserUtils._cfg()
-        return DriverWait(cfg)
-
-    @staticmethod
-    def _explicit_wait(timeout_s: Optional[float] = None,
-                       poll_s: Optional[float] = None) -> WebDriverWait:
-        cfg = BrowserUtils._cfg()
-        to = timeout_s if timeout_s is not None else (cfg.wait_timeout_ms / 1000.0)
-        po = poll_s if poll_s is not None else (cfg.polling_interval_ms / 1000.0)
-        return WebDriverWait(BrowserUtils._driver(), to, poll_frequency=po)
+        return Waiter(timeout_s=cfg.wait_timeout_ms / 1000.0,
+                      poll_s=cfg.polling_interval_ms / 1000.0)
 
     # ----------------------------
     #      TAB_SWITCHING_WAIT
@@ -46,10 +41,10 @@ class BrowserUtils:
         Wait document.readyState == 'complete' at current tab.
         """
         d = BrowserUtils._driver()
-        desc = "document.readyState == 'complete'"
+        desc = "Wait for document ready state is 'complete'"
         with AllureReporter.step(desc):
-            BrowserUtils._dw().waiter.until(
-                supplier=lambda: d.execute_script("return document.readyState") == "complete",
+            BrowserUtils._waiter().until(
+                supplier=lambda: document_ready_state_complete(d),
                 on_timeout=lambda: f"{desc}. url={getattr(d,'current_url',None)} title={getattr(d,'title',None)}"
             )
 
@@ -58,8 +53,12 @@ class BrowserUtils:
         """
         Wait for the number of windows/tabs to equal 'count'.
         """
-        with AllureReporter.step(f"wait_for_window_count({count})"):
-            BrowserUtils._explicit_wait(timeout_s).until(EC.number_of_windows_to_be(count))
+        d = BrowserUtils._driver()
+        cfg = BrowserUtils._cfg()
+        to = timeout_s if timeout_s is not None else (cfg.wait_timeout_ms / 1000.0)
+        po = cfg.polling_interval_ms / 1000.0
+        with AllureReporter.step(f"Wait for window count({count})"):
+            WebDriverWait(d, to, po).until(EC.number_of_windows_to_be(count))
 
     @staticmethod
     def wait_for_new_window(old_handles: Iterable[str]) -> str:
@@ -67,14 +66,16 @@ class BrowserUtils:
         Wait for a new handle to appear compared to the old list and return the new handle.
         """
         d = BrowserUtils._driver()
-        old = set(old_handles)
-        desc = "new_window_is_opened"
+        desc = "New window is opened"
         with AllureReporter.step(desc):
-            BrowserUtils._dw().waiter.until(
-                supplier=lambda: len(set(d.window_handles) - old) >= 1,
+            BrowserUtils._waiter().until(
+                supplier=lambda: new_window_appeared(d, old_handles),
                 on_timeout=lambda: f"{desc}. current_handles={d.window_handles}"
             )
-        return list(set(d.window_handles) - old)[0]
+        new_handle = get_new_window_handle(d, old_handles)
+        if new_handle is None:
+            raise RuntimeError("Wait succeeded but new handle not found.")
+        return new_handle
 
     # ----------------------------
     #      TAB_SWITCHING_ACTION
@@ -82,7 +83,7 @@ class BrowserUtils:
 
     @staticmethod
     def switch_to(handle: str) -> None:
-        with AllureReporter.step(f"switch_back_to({handle})"):
+        with AllureReporter.step(f"Switch back to({handle})"):
             BrowserUtils._driver().switch_to.window(handle)
 
     @staticmethod
@@ -92,7 +93,7 @@ class BrowserUtils:
         Do not use if you are testing multi-tab behavior.
         """
         d = BrowserUtils._driver()
-        with AllureReporter.step("force_same_tab_links()"):
+        with AllureReporter.step("Force to same tab links"):
             js = """
             document.querySelectorAll('a[target="_blank"]').forEach(a => a.removeAttribute('target'));
             window.open = function(url, name, specs){ window.location.href = url; return window; };

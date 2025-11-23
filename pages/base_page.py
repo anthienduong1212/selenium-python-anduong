@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import allure
+
 from core.configuration.configuration import Configuration
 from core.driver.driver_manager import DriverManager
-from core.element.elements import Element, Elements
+from core.element.element import Element, Elements
 from core.logging.logging import Logger
 
 
@@ -24,6 +26,7 @@ class BasePage:
     def els(self, selector):
         return Elements(selector, config=self.config)
 
+    @allure.step("Navigate to {url}")
     def open(self, url: str):
         self.driver.get(url)
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unicodedata
+import re
 
 from core.logging.logging import Logger
 
@@ -10,6 +11,8 @@ def normalize(s: str) -> str:
     Logger.debug(f"Normalizing string: {s}")
     try:
         s = unicodedata.normalize("NFKD", s)
+        s = s.lower()
+        s = re.sub(r'[^a-z0-9]', '', s)
         normalized = " ".join(ch for ch in s if not unicodedata.combining(ch)).lower().strip()
         Logger.debug(f"Normalized string: {normalized}")
         return normalized
@@ -19,7 +22,7 @@ def normalize(s: str) -> str:
 
 
 def contains_text(text: str, ex: str) -> bool:
-    """Verify text contain city (tolerant 'da lat' ~ 'dalat')."""
+    """Verify text contain (tolerant 'da lat' ~ 'dalat')."""
     t = normalize(text).replace(" ", "")
     c = normalize(ex).replace(" ", "")
     Logger.debug(f"Verify {t} contains {c}")

@@ -30,3 +30,15 @@ def title_contains(substr: str) -> DriverCondition:
     return DriverCondition(f'title_contains("{substr}")', lambda d: substr in (d.title or ""))
 
 
+def document_ready_state_complete(driver):
+    return driver.execute_script("return document.readyState") == "complete"
+
+
+def new_window_appeared(driver, old_handles: Iterable[str]):
+    old = set(old_handles)
+    return len(set(driver.window_handles) - old) >= 1
+
+
+def get_new_window_handle(driver, old_handles: Iterable[str]) -> Optional[str]:
+    new_handles = list(set(driver.window_handles) - set(old_handles))
+    return new_handles[0] if new_handles else None

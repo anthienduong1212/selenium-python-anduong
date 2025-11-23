@@ -8,6 +8,7 @@ from selenium.webdriver.common.by import By
 
 ByTuple = Tuple[str, str]
 
+
 # ----------- helpers: safe escape -------------
 def _xpath_literal(s: str) -> str:
     s = str(s)
@@ -21,8 +22,6 @@ def _xpath_literal(s: str) -> str:
 
     return f"concat({separator.join(parts)})"
 
-def _css_attr_value(s: str) -> str:
-    return re.sub(r'[\\.#! "\[\]:]', lambda match: '\\' + match.group(0), str(s))
 
 @dataclass(frozen=True)
 class Locator:
@@ -102,7 +101,7 @@ class Locator:
             return self
         if self.by == By.XPATH:
             safe = {k: _xpath_literal(v) for k, v in kwargs.items()}
-            return Locator(self.by, self.value.format(**safe), self.desc, parent=self.parent)
+            return Locator(self.by, self.value.format(**safe), f"{self.desc} {kwargs}", parent=self.parent)
 
     def __call__(self, **kwargs: Any) -> "Locator":
         return self.format(**kwargs)

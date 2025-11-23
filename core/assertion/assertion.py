@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import allure
 from typing import Any, Callable, Iterable, Mapping, Optional
 
 from core.logging.logging import Logger
@@ -9,6 +10,7 @@ from core.report.reporting import AllureReporter
 # --- Optional: soft assertions via pytest-check ---
 try:
     import pytest_check as check  # pip install pytest-check
+
     _SOFT_ASSERT = True
 except ImportError:
     check = None
@@ -23,6 +25,11 @@ def _attach_json_allure(title: str, data: Any) -> None:
 
 def _fail(msg: str, expr: bool = False) -> None:
     """Uses pytest_check for soft assertion or standard assert for hard assertion."""
+    if not expr:
+        from core.driver.driver_manager import DriverManager
+        driver = DriverManager.get_current_driver()
+        AllureReporter.attach_page_screenshot(driver)
+
     if _SOFT_ASSERT:
         check.is_true(expr, msg)
     else:
@@ -33,7 +40,7 @@ def _fail(msg: str, expr: bool = False) -> None:
 #          HELPER
 # ---------------------------
 
-
+@allure.step("Assert equal: expected '{expected!r}', actual '{actual!r}'")
 def assert_equal(actual: Any, expected: Any, msg: Optional[str] = None) -> None:
     """Compare equal – with optional message."""
     if actual != expected:
@@ -41,18 +48,21 @@ def assert_equal(actual: Any, expected: Any, msg: Optional[str] = None) -> None:
         _fail(msg or f"Values are not equal. Expected: {expected!r}, Actual: {actual!r}", expr=False)
 
 
+@allure.step("Assert true: condition '{msg} or {expr}'")
 def assert_true(expr: bool, msg: Optional[str] = None) -> None:
     """Assert that the expression is True."""
     if not expr:
         _fail(msg or "Expected condition to be True", expr=False)
 
 
+@allure.step("Assert false: condition '{msg} or {expr}'")
 def assert_false(expr: bool, msg: Optional[str] = None) -> None:
     """Assert that the expression is False."""
     if expr:
         _fail(msg or "Expected condition to be False", expr=False)
 
 
+@allure.step("Assert in: member '{member!r}' in container")
 def assert_in(member: Any, container: Iterable[Any], msg: Optional[str] = None) -> None:
     """Assert that the member is in the container."""
     if member not in container:
@@ -61,12 +71,14 @@ def assert_in(member: Any, container: Iterable[Any], msg: Optional[str] = None) 
         _fail(msg or f"{member!r} not found in container", expr=False)
 
 
+@allure.step("Assert not in: member '{member!r}' not in container")
 def assert_not_in(member: Any, container: Iterable[Any], msg: Optional[str] = None) -> None:
     """Assert that the member is not in the container."""
     if member in container:
         _fail(msg or f"{member!r} unexpectedly found in container", expr=False)
 
 
+@allure.step("Assert length: object len, expected '{expected_len}'")
 def assert_len(obj: Any, expected_len: int, msg: Optional[str] = None) -> None:
     """Assert that the object has the expected length."""
     actual_len = len(obj)
@@ -75,6 +87,7 @@ def assert_len(obj: Any, expected_len: int, msg: Optional[str] = None) -> None:
         _fail(msg or f"Length mismatch. Expected: {expected_len}, Actual: {actual_len}", expr=False)
 
 
+@allure.step("Assert between: value {num} in range [{lo}, {hi}]")
 def assert_between(num: float, lo: float, hi: float, inclusive: bool = True, msg: Optional[str] = None) -> None:
     """Assert that the number is within the specified range."""
     is_in_range = (lo <= num <= hi) if inclusive else (lo < num < hi)
@@ -83,6 +96,7 @@ def assert_between(num: float, lo: float, hi: float, inclusive: bool = True, msg
         _fail(msg or f"{num} not in range [{lo}, {hi}{']' if inclusive else ')'}]", expr=False)
 
 
+@allure.step("Assert JSON contains subset")
 def assert_json_contains(actual: Mapping[str, Any], expected_subset: Mapping[str, Any],
                          msg: Optional[str] = None) -> None:
     """Every key/value in expected_subset must be present in actual (simple deep comparison)."""

@@ -4,12 +4,16 @@ import os
 from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
+
+import allure
 from typing import Callable, Optional, Sequence
 
 from core.element.conditions import clickable as cond_clickable
 from core.element.conditions import visible as cond_visible
-from core.element.elements import Element
-from core.element.locators import Locator
+from core.element.element import Element
+from core.element.locator import Locator
+from core.logging.logging import Logger
+from core.report.reporting import AllureReporter
 from core.utils.datetime_utils import parse_strict
 
 
@@ -63,6 +67,7 @@ class Calendar:
         for i in range(containers.size()):
             month = containers.get(i).find(self.cfg.month_caption_in_container).should(cond_visible())
             captions.append(month.text().strip())
+            Logger.debug(f"Current month on calendar: {month}")
 
         return captions
 
@@ -73,8 +78,8 @@ class Calendar:
         return out
 
     def _ensure_open(self):
+        """Checking the title of calendar, if no title display means no calendar open"""
         if self.cfg.opener:
-            # Assume that if calendar is not opened, there were no calendar title display
             containers = self._root_ctx().all(self.cfg.month_containers)
             if containers.size() == 0:
                 self._root_ctx().find(self.cfg.opener).should_be(cond_visible()).click()
@@ -118,12 +123,13 @@ class Calendar:
         Select a date (YYYY-MM-DD).
         Automatically navigate the month and click the date.
         """
-        target = self._parse_date_picker(date_str)
-        self.navigate_to(target)
+        with AllureReporter.step(f"Select date {date_str} from {self.desc}"):
+            target = self._parse_date_picker(date_str)
+            self.navigate_to(target)
 
-        day_loc = self._locate_day(target)
-        self._root_ctx().find(day_loc).should_be(cond_clickable()).click()
-        return self
+            day_loc = self._locate_day(target)
+            self._root_ctx().find(day_loc).should_be(cond_clickable()).click()
+            return self
 
     def pick_range(self, start_str: str, end_str: str):
         """Select a date range [start, end] (often used on sites that select Check-in / Check-out)."""

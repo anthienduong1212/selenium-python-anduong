@@ -27,4 +27,7 @@ class JSScript:
 
     IS_DESCENDANT_SCRIPT = "return arguments[0].contains(arguments[1]);"
 
+    GET_CURRENT_STYLE = "return arguments[0].getAttribute('style')||'';"
+    SET_NEW_STYLE = "arguments[0].setAttribute('style', (arguments[1] ? arguments[1]+';' : '') + arguments[2]);"
+
 

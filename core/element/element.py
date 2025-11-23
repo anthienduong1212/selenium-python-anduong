@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import time
 from dataclasses import replace
+
+import allure
 from typing import List, Optional, Union
 
 from selenium.common.exceptions import (ElementClickInterceptedException,
@@ -14,10 +16,12 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webdriver import WebDriver, WebElement
 
 from core.configuration.configuration import Configuration
+from core.constants.constants import Constants
+from core.constants.JS_scripts import JSScript
 from core.driver.driver_manager import DriverManager
 from core.element.conditions import Condition, click_ready, in_viewport
 from core.element.conditions import visible as cond_visible
-from core.element.locators import Locator
+from core.element.locator import Locator
 from core.logging.logging import Logger
 from core.report.reporting import AllureReporter
 from core.waiter.wait import Waiter
@@ -41,10 +45,9 @@ class Element:
                             f", not {type(selector).__name__}. Ensure Locator is used for initialization.")
 
         self.locator: Locator = selector
-        self.locator: Locator = selector
         self.config: Configuration = config or DriverManager.get_current_config()
         self.context: Optional["Element"] = context
-        self.name = str(self.locator)
+        self.name = str(self.locator.desc if self.locator.desc else self.locator)
         self._last_ref: Optional[WebElement] = None
 
         self.waiter = Waiter(
@@ -81,7 +84,7 @@ class Element:
 
         return self._find_web_element_in_context(current_loc)
 
-    def _resolve(self):
+    def resolve(self):
         """
         Resolve the WebElement reference, re-finding if stale.
         This is the core lazy-loading mechanism.
@@ -123,7 +126,7 @@ class Element:
         """
         viewport_cond = in_viewport()
         try:
-            return viewport_cond.predicate(self._resolve())
+            return viewport_cond.predicate(self.resolve())
         except StaleElementReferenceException:
             return viewport_condition.predicate(self._find_now())
         except Exception as e:
@@ -135,7 +138,7 @@ class Element:
         if self.is_in_viewport():
             return
 
-        el = self._resolve()
+        el = self.resolve()
         backend = getattr(self.config, "scroll_backend", "js")
         block = getattr(self.config, "scroll_block", "center")
         header_offset = getattr(self.config, "header_offset_px", 0)
@@ -179,46 +182,51 @@ class Element:
 
     def click(self) -> "Element":
         """Click on the element."""
-        self.should(cond_visible())
-        try:
-            self._resolve().click()
-        except ElementClickInterceptedException:
-            Logger.info(f"Click intercepted. Waiting for click ability on {self.name}.")
-            timeout_ms = max(500, self.config.polling_interval_ms * 4)
-            self.should(click_ready(), timeout_ms=timeout_ms)
-            self._resolve().click()
-        return self
+        with AllureReporter.step(f"Click on element {self.name}"):
+            self.should(cond_visible())
+            try:
+                self.resolve().click()
+            except ElementClickInterceptedException:
+                Logger.info(f"Click intercepted. Waiting for click ability on {self.name}.")
+                timeout_ms = max(500, self.config.polling_interval_ms * 4)
+                self.should(click_ready(), timeout_ms=timeout_ms)
+                self.resolve().click()
+            return self
 
     def type(self, text: str, clear: bool = True) -> "Element":
         """Type text into an input element."""
-        self.should(cond_visible())
-        el = self._resolve()
-        if clear:
-            try:
-                el.clear()
-            except Exception:
-                Logger.debug(f"el.clear() failed for {self.name}: {e}. Falling back to Ctrl+A+Delete.")
-                el.send_keys(Keys.CONTROL, "a")
-                el.send_keys(Keys.DELETE)
-        el.send_keys(text)
-        return self
+        with AllureReporter.step(f"Type {text} in to {self.name}"):
+            self.should(cond_visible())
+            el = self.resolve()
+            if clear:
+                try:
+                    el.clear()
+                except Exception:
+                    Logger.debug(f"el.clear() failed for {self.name}: {e}. Falling back to Ctrl+A+Delete.")
+                    el.send_keys(Keys.CONTROL, "a")
+                    el.send_keys(Keys.DELETE)
+            el.send_keys(text)
+            return self
 
     def press(self, *keys) -> "Element":
         """Send specific key presses to the element (e.g., Keys. ENTER)."""
-        self._resolve().send_keys(*keys)
-        return self
+        with AllureReporter.step(f"Send {keys} on {self.name}"):
+            self.resolve().send_keys(*keys)
+            return self
 
     def clear(self) -> "Element":
         """Clear the text of an input element."""
-        self._resolve().clear()
-        return self
+        with AllureReporter.step(f"Clear text on {self.name}"):
+            self.resolve().clear()
+            return self
 
     def hover(self) -> "Element":
         """Clear the text of an input element."""
-        self.should(cond_visible())
-        self.scroll_into_view()
-        ActionChains(self._driver()).move_to_element(self._resolve()).perform()
-        return self
+        with AllureReporter.step(f"Hover mouse to {self.name}"):
+            self.should(cond_visible())
+            self.scroll_into_view()
+            ActionChains(self._driver()).move_to_element(self.resolve()).perform()
+            return self
 
     # ================================
     #          STATE GETTERS
@@ -231,7 +239,7 @@ class Element:
             - "all": get all text in DOM; using textContent
             - "value": for input/textarea; using value
         """
-        el = self._resolve()
+        el = self.resolve()
         try:
             if mode == "visible":
                 return (el.text or el.get_attribute("innerText") or "").strip()
@@ -251,7 +259,7 @@ class Element:
     def attr(self, name: str) -> Optional[str]:
         """Get attribute value of the element."""
         try:
-            return self._resolve().get_attribute(name)
+            return self.resolve().get_attribute(name)
         except Exception as e:
             Logger.error(f"Error getting attribute {name}: {e}")
             return None
@@ -259,7 +267,7 @@ class Element:
     def css(self, name: str) -> Optional[str]:
         """Get CSS property value of the element."""
         try:
-            return self._resolve().value_of_css_property(name)
+            return self.resolve().value_of_css_property(name)
         except Exception as e:
             Logger.error(f"Error getting CSS property {name}: {e}")
             return None
@@ -268,30 +276,38 @@ class Element:
     #          ELEMENT UTILS
     # ================================
 
-    def highlight(self, style: str = "border: 3px solid red;", duration_ms: int = 200) -> None:
-        """Highlight the element temporarily for debugging."""
+    def highlight(self, style: str = Constants.HIGHLIGHT_STYLE,
+                  duration_ms: int = Constants.HIGHLIGHT_DURATION_MS,
+                  undo: bool = False) -> None:
+        """
+        Highlight the element temporarily or persistently for debugging/screenshots.
+
+        :param style: The CSS style to apply.
+        :param duration_ms: How long to keep the highlight (if undo=True).
+        :param undo: If True, highlight is temporary. If False, highlight persists until explicitly removed or page changes.
+        """
         try:
-            el = self._resolve()
-            prev = self._driver().execute_script("return arguments[0].getAttribute('style')||'';", el) or ""
-            self._driver().execute_script(
-                "arguments[0].setAttribute('style', (arguments[1] ? arguments[1]+';' : '') + arguments[2]);",
-                el, prev, style
-            )
-            time.sleep(max(0, duration_ms) / 1000.0)
-            self._driver().execute_script("arguments[0].setAttribute('style', arguments[1]);", el, prev)
+            el = self.resolve()
+            prev = self._driver().execute_script(JSScript.GET_CURRENT_STYLE, el) or ""
+            self._driver().execute_script(JSScript.SET_NEW_STYLE, el, prev, style)
+            if undo:
+                time.sleep(max(0, duration_ms) / 1000.0)
+                self._driver().execute_script("arguments[0].setAttribute('style', arguments[1]);", el, prev)
         except Exception as e:
             Logger.warning(f"Highlight failed: {e}")
             pass
 
     def exists(self) -> bool:
         """Check if the element exists in the DOM without waiting."""
-        try:
-            if self.context:
-                p = self.context._resolve()
-                return len(p.find_elements(self.locator.by, self.locator.value)) > 0
-            return len(self._driver().find_elements(self.locator.by, self.locator.value)) > 0
-        except Exception:
-            return False
+        with AllureReporter.step(f"Check element {self.name} is exist or not"):
+            try:
+                if self.context:
+                    p = self.context.resolve()
+                    return len(p.find_elements(self.locator.by, self.locator.value)) > 0
+                return len(self._driver().find_elements(self.locator.by, self.locator.value)) > 0
+            except Exception:
+                Logger.error(f"Element {self.locator} is not exist")
+                return False
 
     # ================================
     #      Waiting / Assertions
@@ -304,6 +320,7 @@ class Element:
         assert timeout_s > 0, "Timeout for 'should' condition must be greater than zero."
 
         if not conditions:
+            Logger.debug(f"Calling should() with no conditions for element: {self.name}")
             return self
 
         temp_wait = self.waiter
@@ -316,7 +333,7 @@ class Element:
         def _condition_checker() -> bool:
             """Closure that runs all conditions, handling stale elements."""
             try:
-                el = self._resolve()
+                el = self.resolve()
                 return all(c.predicate(el) for c in conditions)
             except (NoSuchElementException, StaleElementReferenceException):
                 return False
@@ -329,40 +346,24 @@ class Element:
                 snapshot = f'text="{(el.text or "").strip()}", enabled={el.is_enabled()}, displayed={el.is_displayed()}'
             except Exception:
                 pass
-            return f"{desc}. Last state: {snapshot}. Locator={self.locator}"
+            return (f"{desc}.\n"
+                    f"Last state: {snapshot}.\n"
+                    f"Locator={self.locator.value}")
 
-        def _shot(path: str) -> bool:
-            Logger.info(f"Attempting to take a screenshot at: {path}")
-            try:
-                return self._driver().save_screenshot(path)
-            except Exception:
-                return False
-
-        with AllureReporter.step(desc):
-            try:
-                temp_wait.until(_condition_checker, _on_timeout)
-                return self
-            except TimeoutException as e:
-                spath = getattr(e, "screenshot_path", None)
-                if spath:
-                    AllureReporter.attach_file(spath, f"FAILED - {self.name}", "image/png")
-                AllureReporter.attach_text("Locator", str(self.locator))
-                raise
+        try:
+            temp_wait.until(_condition_checker, _on_timeout)
+            Logger.debug(f"Condition met for {desc}")
+            return self
+        except TimeoutException as e:
+            spath = getattr(e, "screenshot_path", None)
+            if spath:
+                AllureReporter.attach_file(spath, f"FAILED - {self.name}", "image/png")
+            AllureReporter.attach_text("Locator", str(self.locator))
+            raise
 
     def should_be(self, *conditions: Condition, timeout_ms: Optional[int] = None) -> "Element":
         return self.should(*conditions, timeout_ms=timeout_ms)
 
-    # ================================
-    #              WITH
-    # ================================
-    def _with(self, **overrides) -> "Element":
-        """Create a copy of Element with config override."""
-        new_cfg = self.config.clone(**overrides)
-        return Element(self.locator, config=new_cfg, context=self.context)
-
-    def as_(self, name: str) -> "Element":
-        """Assign a human-readable name to the element."""
-        return Element(self.locator.with_decs(name), config=self.config, context=self.context)
 
 # ================================
 #          ELEMENTS COLLECTION
@@ -395,11 +396,11 @@ class Elements:
     def _driver(self) -> WebDriver:
         return DriverManager.get_driver(self.config)
 
-    def _resolve(self) -> List[WebElement]:
+    def resolve(self) -> List[WebElement]:
         """Find the list of WebElements immediately."""
         try:
             if self.context:
-                parent = self.context._resolve()
+                parent = self.context.resolve()
                 return parent.find_elements(self.locator.by, self.locator.value)
             return self._driver().find_elements(self.locator.by, self.locator.value)
         except (NoSuchElementException, StaleElementReferenceException):
@@ -420,12 +421,12 @@ class Elements:
 
     def size(self) -> int:
         """Get the current size of the collection."""
-        return len(self._resolve())
+        return len(self.resolve())
 
     def texts(self) -> List[str]:
         """Get the visible text of all elements in the collection."""
         values: List[str] = []
-        for el in self._resolve():
+        for el in self.resolve():
             try:
                 values.append((el.text or "").strip())
             except StaleElementReferenceException:
@@ -435,35 +436,28 @@ class Elements:
 
     def should_have_size(self, n: int, timeout_ms: Optional[int] = None) -> "Elements":
         """Wait until the collection has exactly the expected size."""
-        timeout_s = timeout_ms/1000.0 if timeout_ms is not None else self.waiter.timeout_s
+        timeout_s = timeout_ms / 1000.0 if timeout_ms is not None else self.waiter.timeout_s
 
         temp_waiter = self.waiter
         if timeout_ms is not None:
             temp_waiter = Waiter(timeout_s=timeout_s, poll_s=self.waiter.poll_s)
 
         def _supplier() -> bool:
-            return len(self._resolve()) == n
+            return len(self.resolve()) == n
 
         def _on_timeout() -> str:
-            actual = len(self._resolve())
+            actual = len(self.resolve())
             return f'Elements("{self.name}") expected size={n}, actual={actual}. Locator={self.locator}'
 
-        def _shot(path: str) -> bool:
-            try:
-                return self._driver().save_screenshot(path)
-            except Exception:
-                return False
-
-        with AllureReporter.step(f'Elements("{self.name}") should have size {n}'):
-            try:
-                temp_waiter.until(_supplier, _on_timeout)
-                return self
-            except TimeoutException as e:
-                spath = getattr(e, "screenshot_path", None)
-                if spath:
-                    AllureReporter.attach_file(spath, f"FAILED - {self.name}", "image/png")
-                AllureReporter.attach_text("Locator", str(self.locator))
-                raise
+        try:
+            temp_waiter.until(_supplier, _on_timeout)
+            return self
+        except TimeoutException as e:
+            spath = getattr(e, "screenshot_path", None)
+            if spath:
+                AllureReporter.attach_file(spath, f"FAILED - {self.name}", "image/png")
+            AllureReporter.attach_text("Locator", str(self.locator))
+            raise
 
 
 class IndexedElement(Element):
@@ -477,7 +471,7 @@ class IndexedElement(Element):
         self._index = index
 
     def _find_now(self) -> WebElement:
-        els = self._collection._resolve()
+        els = self._collection.resolve()
         if self._index < 0 or self._index >= len(els):
             raise NoSuchElementException(
                 f"Index {self._index} is out of range (size={len(els)}) for {self._collection.name}")

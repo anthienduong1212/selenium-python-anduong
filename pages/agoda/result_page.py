@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import allure
 from typing import Tuple
 
 from selenium.webdriver.common.by import By
 
 from core.element.conditions import Condition
 from core.element.conditions import visible as cond_visible
-from core.element.locators import Locator
+from core.element.locator import Locator
 from core.utils.browser_utils import BrowserUtils
 from core.utils.datetime_utils import parse_strict
 from core.utils.string_utils import contains_text
@@ -23,15 +24,16 @@ class ResultPage(BasePage):
     LBL_HOTEL_INFORMATION_NAME = Locator.xpath("//h3[@data-selenium='hotel-name']", "RESULT_PAGE Hotel Name")
     LBL_HOTEL_ADDRESS = Locator.xpath("//button[@data-selenium='area-city-text']//span", "RESULT_PAGE Hotel City")
     LBL_HOTEL_ROOM_OFFER = Locator.xpath("//div[@data-element-name='pill-each-item']/span[contains(text(),"
-                                         "{offer_name})]", "RESULT_PAGE Room offer {offer_name}")
+                                         "{offer_name})]", "RESULT_PAGE Room offer")
 
     # -------------- FILTER ----------------
     LBL_FILTER = Locator.xpath("//legend[contains(@id,{filter_name})]/following-sibling::ul",
-                               "RESULT_PAGE Room Offer Filter {filter_name}")
+                               "RESULT_PAGE Room Offer Filter")
     OPT_FILTER_OPTION = Locator.xpath("//div[.//span[normalize-space(.)={option_name}]]/preceding-sibling::div//input"
-                                      ,"RESULT_PAGE Filter option {option_name}")
+                                      ,"RESULT_PAGE Filter option")
 
-    def get_top_n_hotels(self, n: int, city: str) -> list[Dict[str, Any]]:
+    @allure.step("Get result of first {n} hotels in {city}")
+    def get_result_of_n_hotel(self, n: int, city: str) -> list[Dict[str, Any]]:
         """
         Verify: Top n LI_HOTEL_INFORMATION elements have:
         - name exists & not empty
@@ -60,6 +62,7 @@ class ResultPage(BasePage):
 
         return list(hotel_data_list)
 
+    @allure.step("Get the list of hotel which is missing info")
     def get_missing_data(self, hotel_data: Tuple[Dict[str, Any], ...], city: str) -> Tuple[List[int], List[Tuple[int, str]]]:
         """
         Get the list of data and extract which data fields is missing
@@ -87,6 +90,7 @@ class ResultPage(BasePage):
         """
         parent = self.el(self.LBL_FILTER(filter_name=filter_name)).should_be(cond_visible())
         child = parent.find(self.OPT_FILTER_OPTION(option_name=option_name))
+        child.scroll_into_view()
         child.click()
 
     def select_first_hotel(self):

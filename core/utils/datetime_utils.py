@@ -15,7 +15,6 @@ locale.setlocale(locale.LC_TIME, os.getenv("LOCALE"))
 
 DEFAULT_TZ = ZoneInfo(os.getenv("TIMEZONE"))
 
-# Offset ISO-8601: PnW/PnD
 _RX_ISO_OFFSET = re.compile(r"^P(?:(\d+)W)?(?:(\d+)D)?$", re.IGNORECASE)
 
 # BASE tokens:

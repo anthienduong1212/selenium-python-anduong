@@ -10,6 +10,7 @@ from selenium.common.exceptions import (NoSuchElementException,
                                         WebDriverException)
 from selenium.webdriver.remote.webdriver import WebDriver
 
+from core.driver.driver_manager import DriverManager
 from core.logging.logging import Logger
 from core.report.reporting import AllureReporter
 
@@ -75,7 +76,7 @@ class Waiter:
         detail = on_timeout()
         elapsed = max(0.0, self.timeout_s)
 
-        msg = f"Timeout after {elapsed:.3f}s (polls={polls}): {detail}"
+        msg = f"Timeout after {elapsed:.3f}s (polls={polls}): \n{detail}"
 
         if last_exc:
             msg += f"\nLast error: {type(last_exc).__name__}: {last_exc}"
