@@ -1,8 +1,0 @@
-Traceback (most recent call last):
-  File "C:\Users\baon2\IdeaProjects\Selenium_Python\selenium-python-anduong\core\report\reporting.py", line 86, in step
-    yield
-  File "C:\Users\baon2\IdeaProjects\Selenium_Python\selenium-python-anduong\tests\agoda\test_booking.py", line 32, in test_homepage
-    assert_false(empty_names, f"Missing name hotel at index: {empty_names}")
-  File "C:\Users\baon2\IdeaProjects\Selenium_Python\selenium-python-anduong\venv\lib\site-packages\allure_commons\_allure.py", line 201, in impl
-    with StepContext(self.title.format(*args, **params), params):
-KeyError: 'msg or expr'

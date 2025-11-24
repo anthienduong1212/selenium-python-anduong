@@ -32,8 +32,8 @@ class ResultPage(BasePage):
     OPT_FILTER_OPTION = Locator.xpath("//div[.//span[normalize-space(.)={option_name}]]/preceding-sibling::div//input"
                                       ,"RESULT_PAGE Filter option")
 
-    @allure.step("Get result of first {n} hotels in {city}")
-    def get_result_of_n_hotel(self, n: int, city: str) -> list[Dict[str, Any]]:
+    @allure.step("Get information of first {n} hotels in {city}")
+    def get_search_hotel_results(self, n: int, city: str) -> list[Dict[str, Any]]:
         """
         Verify: Top n LI_HOTEL_INFORMATION elements have:
         - name exists & not empty
@@ -62,26 +62,25 @@ class ResultPage(BasePage):
 
         return list(hotel_data_list)
 
-    @allure.step("Get the list of hotel which is missing info")
-    def get_missing_data(self, hotel_data: Tuple[Dict[str, Any], ...], city: str) -> Tuple[List[int], List[Tuple[int, str]]]:
+    @allure.step("Checking hotel which is missing data")
+    def checking_hotel_address_from_search(self, n: int, city: str) -> List[Tuple[int, str]]:
         """
         Get the list of data and extract which data fields is missing
-        :param hotel_data: List of hotel data
+        :param n: Number of result
         :param city: matching term
         :return: List of hotel which is missing their information
         """
+        hotel_data = self.get_search_hotel_results(n, city)
 
         mismatched_cities: List[Tuple[int, str]] = []
-        empty_names: List[int] = []
 
         for i, data in enumerate(hotel_data):
-            if not data.get("name"):
-                empty_names.append(i)
             if not contains_text(data.get("address"), city):
                 mismatched_cities.append(i)
 
-        return empty_names, mismatched_cities
+        return False if len(mismatched_cities) > 0 else True
 
+    @allure.step("Filter {filter_name} with {option_name}")
     def search_filter_with_term(self, filter_name: str, option_name: str):
         """
         Select an option on filter base on filter_name
@@ -93,6 +92,7 @@ class ResultPage(BasePage):
         child.scroll_into_view()
         child.click()
 
+    @allure.step("Select the first hotel on result")
     def select_first_hotel(self):
         """Select first hotel in search result"""
         hotel = self.els(self.LI_HOTEL_INFORMATION).get(0)

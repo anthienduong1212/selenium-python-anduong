@@ -17,7 +17,6 @@ from core.configuration.configuration import Configuration
 from core.constants.constants import Constants
 from core.driver.driver_factory import DriverFactory
 from core.logging.logging import Logger
-from core.report.reporting import AllureReporter
 
 
 @dataclass
@@ -154,11 +153,7 @@ class DriverManager:
 
     @classmethod
     def _safe_quit(cls, driver: WebDriver) -> None:
-        """Safe quit + attach Allure if possible"""
-        try:
-            AllureReporter.attach_page_screenshot(driver, name="Final Screenshot")
-        except Exception as e:
-            Logger.error(f"Error when capturing Allure screenshot: {e}")
+        """Safe quit"""
         try:
             driver.quit()
         except Exception as e:

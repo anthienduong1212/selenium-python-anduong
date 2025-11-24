@@ -1,3 +1,4 @@
+import allure
 from typing import Any, Dict, Tuple
 
 from core.element.conditions import Condition
@@ -31,6 +32,7 @@ class HotelDetails(BasePage):
     TXT_HOTEL_NAME = Locator.xpath("//h1[@data-selenium='hotel-header-name']")
     TXT_HOTEL_ADDRESS = Locator.xpath("//span[@data-selenium='hotel-address-map']")
 
+    @allure.step("Select {option} on NavBar")
     def select_navbar_option(self, option: NavbarOptions):
         format_option_locator = self.BTN_NAVBAR_OPTION(option=option)
 
@@ -39,7 +41,9 @@ class HotelDetails(BasePage):
         option = self.el(nested_locator).should_be(cond_visible())
         option.click()
 
+    @allure.step("Check the {option} display or not")
     def is_option_display(self, option: str):
+        self.select_navbar_option(NavbarOptions.ROOMS)
         room_filter = self.el(self.GRD_ROOM_FILTER).should_be(cond_visible())
         option = room_filter.find(self.OPT_ROOM_FILTER_OPTION(option=option))
 
@@ -48,6 +52,7 @@ class HotelDetails(BasePage):
     def add_to_favorites(self):
         self.el(self.BTN_ADD_TO_FAVORITES).should(cond_visible()).click()
 
+    @allure.step("Get details of hotel information")
     def get_hotel_information(self) -> dict[str, Any]:
         parent = self.el(self.TXT_HOTEL_INFO_PARENT).should_be(cond_visible())
         parent.scroll_into_view()

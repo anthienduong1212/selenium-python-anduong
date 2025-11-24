@@ -11,6 +11,7 @@ from typing import Iterable, Optional
 from allure_commons.types import AttachmentType, ParameterMode
 from selenium.webdriver.remote.webdriver import WebElement
 
+from core.driver.driver_manager import DriverManager
 from core.logging.logging import Logger
 
 try:
@@ -85,10 +86,9 @@ class AllureReporter:
             try:
                 yield
             except Exception:
-                from core.driver.driver_manager import DriverManager
                 driver = DriverManager.get_current_driver()
                 if driver is not None:
-                    AllureReporter.attach_page_screenshot(driver)
+                    AllureReporter.attach_page_screenshot()
                     if include_context:
                         AllureReporter.attach_text("URL", safe_str(getattr(driver, "current_url", "")))
                         AllureReporter.attach_text("Title", safe_str(getattr(driver, "title", "")))
@@ -132,10 +132,11 @@ class AllureReporter:
     #    SELENIUM SCREENSHOT
     # =========================
     @staticmethod
-    def attach_page_screenshot(driver, name: str = "Page Screenshot"):
+    def attach_page_screenshot(name: str = "Page Screenshot"):
         """Take a full screenshot of the current page (PNG) and attach it (no need to write the file)."""
+        d = DriverManager.get_current_driver()
         try:
-            png = driver.get_screenshot_as_png()
+            png = d.get_screenshot_as_png()
             allure.attach(png, name=name, attachment_type=allure.attachment_type.PNG)
         except Exception as e:
             Logger.error(f"Could not take page screenshot: {e}")
