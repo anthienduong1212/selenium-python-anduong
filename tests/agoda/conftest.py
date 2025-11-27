@@ -10,13 +10,28 @@ BOOKING_DATA = os.getenv("BOOKING_JSON")
 
 
 @pytest.fixture(scope="module")
-def booking_data() -> BookingData:
-    """Fixture to load  booking data."""
+def all_booking_data():
+    """Load the entire booking data JSON file once per module."""
     try:
-        raw = load_json_as(BOOKING_DATA, BookingData.from_dict)
-        return resolve_booking_date(raw)
+        raw = load_json_as(BOOKING_DATA, lambda data: data)
+        return raw
     except Exception:
-        raise ValueError("Data Path is NULL")
+        raise ValueError("Cannot load booking data file.")
+
+
+@pytest.fixture(scope="function")
+def booking_data(request, all_booking_data) -> BookingData:
+    """
+    Fixture to provide specific booking data for a test case ID. The 'request.param' will contain the ID
+    """
+    test_id = request.param
+    if test_id in all_booking_data:
+        raw_booking_data = all_booking_data[test_id]
+
+        processed_data = load_json_as(raw_booking_data, BookingData.from_dict)
+        return resolve_booking_date(processed_data)
+    else:
+        raise ValueError(f"Booking data for test ID '{test_id}' not found in JSON file.")
 
 
 # @pytest.fixture()

@@ -118,7 +118,7 @@ def browser_name(request, worker_id):
         return browsers[0]
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="function", autouse=True)
 def driver(request, browser_name, cfg) -> object:
     """
     Fixture initializes and returns a driver for each test. Automatically calls DriverManager.quit_driver() when finished

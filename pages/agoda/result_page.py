@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import allure
-from typing import Tuple
+from typing import Tuple, List, Dict
 
 from selenium.webdriver.common.by import By
 
@@ -10,6 +10,7 @@ from core.element.conditions import visible as cond_visible
 from core.element.locator import Locator
 from core.utils.browser_utils import BrowserUtils
 from core.utils.datetime_utils import parse_strict
+from core.logging.logging import Logger
 from core.utils.string_utils import contains_text
 from pages.base_page import BasePage
 
@@ -30,7 +31,7 @@ class ResultPage(BasePage):
     LBL_FILTER = Locator.xpath("//legend[contains(@id,{filter_name})]/following-sibling::ul",
                                "RESULT_PAGE Room Offer Filter")
     OPT_FILTER_OPTION = Locator.xpath("//div[.//span[normalize-space(.)={option_name}]]/preceding-sibling::div//input"
-                                      ,"RESULT_PAGE Filter option")
+                                      , "RESULT_PAGE Filter option")
 
     @allure.step("Get information of first {n} hotels in {city}")
     def get_search_hotel_results(self, n: int, city: str) -> list[Dict[str, Any]]:
@@ -80,17 +81,22 @@ class ResultPage(BasePage):
 
         return False if len(mismatched_cities) > 0 else True
 
-    @allure.step("Filter {filter_name} with {option_name}")
-    def search_filter_with_term(self, filter_name: str, option_name: str):
+    @allure.step("Filter {filter_name} with available option")
+    def filter_with_term(self, filter_name: str, filters: List[Dict[str, str]]):
         """
         Select an option on filter base on filter_name
         :param filter_name: Name of filter
-        :param option_name: Name of option
+        :param filters: List of filter with it option
         """
-        parent = self.el(self.LBL_FILTER(filter_name=filter_name)).should_be(cond_visible())
-        child = parent.find(self.OPT_FILTER_OPTION(option_name=option_name))
-        child.scroll_into_view()
-        child.click()
+        found_filter = [d for d in filters if filter_name in d]
+        if found_filter:
+            option = found_filter[filter_name]
+            parent = self.el(self.LBL_FILTER(filter_name=filter_name)).should_be(cond_visible())
+            child = parent.find(self.OPT_FILTER_OPTION(option_name=option))
+            child.scroll_into_view()
+            child.click()
+        else:
+            Logger.error(f"Filter {filter_name} not found")
 
     @allure.step("Select the first hotel on result")
     def select_first_hotel(self):

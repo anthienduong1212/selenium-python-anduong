@@ -13,76 +13,116 @@ def _attach_json_allure(title: str, data: Any) -> None:
     AllureReporter.attach_json(name=title, data=data, pretty=True)
 
 
-def _fail(msg: str, expr: bool = False) -> None:
-    """Uses pytest_check for soft assertion or standard assert for hard assertion."""
-    if not expr:
-        AllureReporter.attach_page_screenshot()
-    assert expr, msg
-
-
 # ---------------------------
 #          HELPER
 # ---------------------------
 
-@allure.step("{msg} | EXPECTED is '{expected!r}', ACTUAL is '{actual!r}'")
 def assert_equal(actual: Any, expected: Any, msg: str) -> None:
     """Compare equal"""
-    if actual != expected:
+    description = f"{msg} | Expected: {expected!r}, Actual: {actual!r}"
+
+    with AllureReporter.step(f"{description}"):
         _attach_json_allure("Expected vs Actual", {"expected": expected, "actual": actual})
 
-    _fail(msg or f"Values are not equal. Expected: {expected!r}, Actual: {actual!r}", expr=(actual == expected))
+        try:
+            assert actual == expected, msg or f"Values are not equal. Expected: {expected!r}, Actual: {actual!r}"
+            Logger.info(f"PASS: {description}")
+        except AssertionError as e:
+            Logger.error(f"FAIL: {description}")
+            AllureReporter.attach_page_screenshot(name="FAIL Screenshot")
+            raise e
 
 
-@allure.step("{msg}")
 def assert_true(expr: bool, msg: str) -> None:
     """Assert that the expression is True."""
-    _fail(msg or "Expected condition to be True", expr=expr)
+    description = f"{msg} |Condition: {expr}"
+
+    with AllureReporter.step(f"Assert true: {description}"):
+        try:
+            assert expr, msg or "Expected condition to be True"
+            Logger.info(f"PASS: {description}")
+        except AssertionError as e:
+            Logger.error(f"FAIL: {description}")
+            AllureReporter.attach_page_screenshot(name="FAIL Screenshot")
+            raise e
 
 
-@allure.step("{msg}")
 def assert_false(expr: bool, msg: str) -> None:
     """Assert that the expression is False."""
-    _fail(msg or "Expected condition to be False", expr=(not expr))
+    description = f"{msg} |Condition: {expr}"
+
+    with AllureReporter.step(f"Assert false: {description}"):
+        try:
+            assert not expr, msg or "Expected condition to be False"
+            Logger.info(f"PASS: {description}")
+        except AssertionError as e:
+            Logger.error(f"FAIL: {description}")
+            AllureReporter.attach_page_screenshot(name="FAIL Screenshot")
+            raise e
 
 
-@allure.step("{msg}")
 def assert_in(member: Any, container: Iterable[Any], msg: str) -> None:
     """Assert that the member is in the container."""
-    if member not in container:
-        container_display = list(container) if not isinstance(container, (str, bytes)) else {"text": container}
-        _attach_json_allure("Container", container_display)
+    description = f"{msg} |{member!r} not found in container"
 
-    _fail(msg or f"{member!r} not found in container", expr=(member in container))
+    with AllureReporter.step(f"{description}"):
+        try:
+            assert member in container, msg or f"{member!r} not found in container"
+            Logger.info(f"PASS: {description}")
+        except AssertionError as e:
+            container_display = list(container) if not isinstance(container, (str, bytes)) else {"text": container}
+            _attach_json_allure("Container", container_display)
+            Logger.error(f"FAIL: {description}")
+            AllureReporter.attach_page_screenshot(name="FAIL Screenshot")
+            raise e
 
 
-@allure.step("{msg}")
 def assert_not_in(member: Any, container: Iterable[Any], msg: str) -> None:
     """Assert that the member is not in the container."""
-    if member in container:
-        container_display = list(container) if not isinstance(container, (str, bytes)) else {"text" : container}
-        _attach_json_allure("Container", container_display)
+    description = f"{msg} |{member!r} unexpectedly found in container"
 
-    _fail(msg or f"{member!r} unexpectedly found in container", expr=(member not in container))
+    with AllureReporter.step(f"Assert not in: {description}"):
+        try:
+            assert member not in container, msg or f"{member!r} unexpectedly found in container"
+            Logger.info(f"PASS: {description}")
+        except AssertionError as e:
+            container_display = list(container) if not isinstance(container, (str, bytes)) else {"text": container}
+            _attach_json_allure("Container", container_display)
+            Logger.error(f"FAIL: {description}")
+            AllureReporter.attach_page_screenshot(name="FAIL Screenshot")
+            raise e
 
 
-@allure.step("{msg} | EXPECTED length is '{expected_len}'")
 def assert_len(obj: Any, expected_len: int, msg: str) -> None:
     """Assert that the object has the expected length."""
     actual_len = len(obj)
-    if actual_len != expected_len:
-        _attach_json_allure("Length check", {"expected_len": expected_len, "actual_len": actual_len})
+    description = f"{msg} |Length mismatch. Expected: {expected_len}, Actual: {actual_len}"
 
-    _fail(msg or f"Length mismatch. Expected: {expected_len}, Actual: {actual_len}", expr=(actual_len == expected_len))
+    with AllureReporter.step(f"Assert length: {description}"):
+        try:
+            assert actual_len == expected_len, msg or f"Length mismatch. Expected: {expected_len}, Actual: {actual_len}"
+            Logger.info(f"PASS: {description}")
+        except AssertionError as e:
+            _attach_json_allure("Length check", {"expected_len": expected_len, "actual_len": actual_len})
+            Logger.error(f"FAIL: {description}")
+            AllureReporter.attach_page_screenshot(name="FAIL Screenshot")
+            raise e
 
 
-@allure.step("{msg}")
 def assert_between(num: float, lo: float, hi: float, inclusive: bool = True, msg: Optional[str] = None) -> None:
     """Assert that the number is within the specified range."""
     is_in_range = (lo <= num <= hi) if inclusive else (lo < num < hi)
-    if not is_in_range:
-        _attach_json_allure("Range", {"value": num, "lo": lo, "hi": hi, "inclusive": inclusive})
+    description = f"{msg} |{num} not in range [{lo}, {hi}{']' if inclusive else ')'}]"
 
-    _fail(msg or f"{num} not in range [{lo}, {hi}{']' if inclusive else ')'}]", expr=is_in_range)
+    with AllureReporter.step(f"Assert between: {description}"):
+        try:
+            assert is_in_range, f"{msg} |{num} not in range [{lo}, {hi}{']' if inclusive else ')'}]"
+            Logger.info(f"PASS: {description}")
+        except AssertionError as e:
+            _attach_json_allure("Range", {"value": num, "lo": lo, "hi": hi, "inclusive": inclusive})
+            Logger.error(f"FAIL: {description}")
+            AllureReporter.attach_page_screenshot(name="FAIL Screenshot")
+            raise e
 
 
 def assert_raises(fn: Callable, exc: type[BaseException]) -> BaseException:
