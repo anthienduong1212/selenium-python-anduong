@@ -6,6 +6,7 @@ from typing import Callable, Iterable, Optional
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from core.configuration.configuration import Configuration
+from core.constants.JS_scripts import JSScript
 from core.driver.driver_conditions import (
     document_ready_state_complete,
     new_window_appeared,
@@ -94,10 +95,7 @@ class BrowserUtils:
         """
         d = BrowserUtils._driver()
         with AllureReporter.step("Force to same tab links"):
-            js = """
-            document.querySelectorAll('a[target="_blank"]').forEach(a => a.removeAttribute('target'));
-            window.open = function(url, name, specs){ window.location.href = url; return window; };
-            """
+            js = JSScript.KEEP_THE_SAME_TAB
             d.execute_script(js)
 
     @staticmethod

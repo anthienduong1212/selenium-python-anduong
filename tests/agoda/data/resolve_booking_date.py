@@ -14,5 +14,6 @@ def resolve_booking_date(booking: BookingData, *, tz: ZoneInfo = DEFAULT_TZ) -> 
         destination=booking.destination,
         checkin_date=ci,
         checkout_date=co,
-        occupancies=booking.occupancies
+        occupancies=booking.occupancies,
+        filters=booking.filters
     )

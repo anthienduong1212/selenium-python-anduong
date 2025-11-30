@@ -66,7 +66,7 @@ def parse_iso_date_str(s: str) -> date:
 
 def _resolve_date_token(obj: Dict, *, tz: ZoneInfo = DEFAULT_TZ) -> date:
     """
-        Input from json
+    Input from json
     :param obj: Dict as { "$date": { "base": "TODAY|NEXT_FRIDAY|2_NEXT_TUESDAY", "offset": "P3D" } }
     :param tz: current timezone
     :return: 'YYYY-MM-DD'

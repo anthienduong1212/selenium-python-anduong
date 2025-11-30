@@ -27,7 +27,15 @@ class JSScript:
 
     IS_DESCENDANT_SCRIPT = "return arguments[0].contains(arguments[1]);"
 
+    SCROLLING_SCRIPT = "arguments[0].scrollIntoView({block: arguments[1], inline: 'nearest'});"
+    GET_BOUNDING_CLIENT_RECT_TOP = "return arguments[0].getBoundingClientRect().top;"
+
     GET_CURRENT_STYLE = "return arguments[0].getAttribute('style')||'';"
     SET_NEW_STYLE = "arguments[0].setAttribute('style', (arguments[1] ? arguments[1]+';' : '') + arguments[2]);"
+
+    KEEP_THE_SAME_TAB = """
+            document.querySelectorAll('a[target="_blank"]').forEach(a => a.removeAttribute('target'));
+            window.open = function(url, name, specs){ window.location.href = url; return window; };
+            """
 
 

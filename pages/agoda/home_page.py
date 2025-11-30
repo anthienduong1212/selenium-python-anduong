@@ -43,9 +43,20 @@ class HomePage(BasePage):
     BTN_SEARCH = Locator.xpath("//div[@id='Tabs-Container']//button[@data-selenium='searchButton']"
                                , "HOME_PAGE Search Button")
 
+    # Popup
+    BTN_CLOSE_POPUP = Locator.xpath("//button[@data-element-name='prominent-app-download-floating-button']")
+
+    @allure.step("Close download AGODA app popup")
+    def close_agoda_app_popup(self):
+        """Close the popup"""
+        close_button = self.el(self.BTN_CLOSE_POPUP)
+        close_button.click()
+
     @allure.step("Search with term: {text}")
     def search_with_term(self, text: str):
         """Fill text to search text box"""
+        self.close_agoda_app_popup()
+
         search_box = self.el(self.TXT_AUTOCOMPLETE_INPUT)
         search_box.type(text, True)
         return self
@@ -55,7 +66,6 @@ class HomePage(BasePage):
         """Select an option from auto suggest"""
         suggest_item = self.el(self.OPT_AUTOSUGGEST_ITEM(city=city))
         suggest_item.click()
-        return self
 
     @allure.step("Select check-in date: {checkin_date} and check-out date: {checkout_date}")
     def select_booking_date(self, checkin_date: str, checkout_date: str):

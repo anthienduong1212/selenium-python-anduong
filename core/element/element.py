@@ -128,7 +128,7 @@ class Element:
         try:
             return viewport_cond.predicate(self.resolve())
         except StaleElementReferenceException:
-            return viewport_condition.predicate(self._find_now())
+            return viewport_cond.predicate(self._find_now())
         except Exception as e:
             Logger.error(f"Error checking viewport status for {self.name}: {e}")
             return False
@@ -150,11 +150,12 @@ class Element:
                 ActionChains(self._driver()).move_to_element(el).perform()
             else:
                 self._driver().execute_script(
-                    "arguments[0].scrollIntoView({block: arguments[1], inline: 'nearest'});",
+                    JSScript.SCROLLING_SCRIPT,
                     el, block
                 )
             if header_offset:
                 self._driver().execute_script("window.scrollBy(0, -arguments[0]);", header_offset)
+
         except Exception as e:
             Logger.warning(f"Scroll backend failed: {e}. Trying simple move_to_element.")
             try:
@@ -168,7 +169,7 @@ class Element:
         last_top = None
         while time.time() < t0 + 0.5:
             try:
-                top = self._driver().execute_script("return arguments[0].getBoundingClientRect().top;", el)
+                top = self._driver().execute_script(JSScript.GET_BOUNDING_CLIENT_RECT_TOP, el)
             except Exception:
                 break
             if last_top is not None and abs(top - last_top) < 0.5:
@@ -413,10 +414,13 @@ class Elements:
         """Get a specific element from the collection by index (lazily)."""
         if self.locator.by.lower() == "xpath":
             new_xpath_value = f"({self.locator.value})[{index + 1}]"
-            new_locator = Locator(by="xpath", value=new_xpath_value, parent=self.locator.parent)
+            new_locator = Locator(by="xpath", value=new_xpath_value,
+                                  parent=self.locator.parent,
+                                  desc="Element of {self.locator.desc} at index {int}")
             return Element(new_locator,
                            config=self.config,
-                           context=self.context)
+                           context=self.context,
+                           )
         return IndexedElement(self, index)
 
     def size(self) -> int:

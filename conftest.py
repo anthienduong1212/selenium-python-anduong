@@ -2,12 +2,16 @@ import os
 import re
 
 import pytest
+import pytest_check
 from dotenv import load_dotenv
 
 load_dotenv()
 
 from pytest import Config
 
+from core.assertion.assertions import AssertionInterface
+from core.assertion.hard_asserts import HardAsserts
+from core.assertion.soft_asserts import SoftAsserts
 from core.configuration.configuration import Configuration
 from core.driver.driver_manager import DriverManager
 from core.logging.logging import Logger
@@ -75,6 +79,7 @@ def _resolve_browser_cli(config: Config) -> list[str]:
     except Exception as e:
         Logger.error(f"Error resolving browser CLI options: {e}")
         raise
+
 
 # ================================
 #          COMMON FIXTURES
@@ -163,3 +168,20 @@ def pytest_runtest_makereport(item, call):
                 AllureReporter.attach_page_screenshot(drv, name=f"{item.name} - failed")
             except Exception:
                 pass
+
+
+# ================================
+#          ASSERTION
+# ================================
+
+@pytest.fixture(scope="function", autouse=True)
+def hard_asserts() -> AssertionInterface:
+    """Provide automatic Hard Asserts for every test case."""
+    return HardAsserts()
+
+
+@pytest.fixture(scope="function", autouse=True)
+def soft_asserts() -> AssertionInterface:
+    """Provide automatic Soft Asserts for every test case."""
+    yield SoftAsserts()
+

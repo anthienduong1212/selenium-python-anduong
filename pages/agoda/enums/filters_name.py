@@ -5,7 +5,7 @@ except ImportError:
 
 
 class FiltersName(StrEnum):
-    ROOM_AMENITIES = "Room amenities"
-    PROPERTIES_FACILITIES = "Property facilities"
-    ROOM_OFFERS = "Room offers"
-    BED_TYPES = "Bed type"
+    ROOM_AMENITIES = "RoomAmenities"
+    PROPERTIES_FACILITIES = "Facilities"
+    ROOM_OFFERS = "RoomOffers"
+    BED_TYPES = "BedType"

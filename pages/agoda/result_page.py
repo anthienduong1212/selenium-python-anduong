@@ -88,15 +88,17 @@ class ResultPage(BasePage):
         :param filter_name: Name of filter
         :param filters: List of filter with it option
         """
-        found_filter = [d for d in filters if filter_name in d]
-        if found_filter:
-            option = found_filter[filter_name]
-            parent = self.el(self.LBL_FILTER(filter_name=filter_name)).should_be(cond_visible())
-            child = parent.find(self.OPT_FILTER_OPTION(option_name=option))
-            child.scroll_into_view()
-            child.click()
-        else:
-            Logger.error(f"Filter {filter_name} not found")
+        for filter_dict in filters:
+            if filter_name in filter_dict:
+                option = filter_dict[filter_name]
+
+                parent = self.el(self.LBL_FILTER(filter_name=filter_name)).should_be(cond_visible())
+                child = parent.find(self.OPT_FILTER_OPTION(option_name=option))
+                child.scroll_into_view()
+                child.click()
+            else:
+                Logger.error(f"Filter {filter_name} not found")
+                raise ValueError("Filter not found")
 
     @allure.step("Select the first hotel on result")
     def select_first_hotel(self):

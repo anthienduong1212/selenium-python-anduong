@@ -82,7 +82,7 @@ class Calendar:
         if self.cfg.opener:
             containers = self._root_ctx().all(self.cfg.month_containers)
             if containers.size() == 0:
-                self._root_ctx().find(self.cfg.opener).should_be(cond_visible()).click()
+                self._root_ctx().find(self.cfg.opener).click()
 
     def _locate_day(self, target: datetime):
         iso = target.strftime(self.full_date_format)
@@ -108,9 +108,9 @@ class Calendar:
                 raise RuntimeError(f"{self.desc}: exceeded max_month_hops while navigating")
 
             if mi_tgt > mi_max:
-                self._root_ctx().find(self.cfg.next_btn).should_be(cond_clickable()).click()
+                self._root_ctx().find(self.cfg.next_btn).click()
             elif self.cfg.prev_btn and mi_tgt < mi_min:
-                self._root_ctx().find(self.cfg.prev_btn).should_be(cond_clickable()).click()
+                self._root_ctx().find(self.cfg.prev_btn).click()
             else:
                 break
 
@@ -128,7 +128,7 @@ class Calendar:
             self.navigate_to(target)
 
             day_loc = self._locate_day(target)
-            self._root_ctx().find(day_loc).should_be(cond_clickable()).click()
+            self._root_ctx().find(day_loc).click()
             return self
 
     def pick_range(self, start_str: str, end_str: str):
