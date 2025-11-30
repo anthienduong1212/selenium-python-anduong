@@ -34,9 +34,7 @@ def pytest_addoption(parser):
                     help="Single browser to run")
     group.addoption("--browsers", nargs="+", action="append", default=None,
                     choices=["chrome", "firefox", "edge"],
-                    help="Repeat to run on multiple browsers, or pass 'auto' to read from --browser-config")
-    group.addoption("--remote-url", dest="remote_url", action="store", default=None,
-                    help="Selenium Grid URL, e.g. http://127.0.0.1:4444/wd/hub")
+                    help="Repeat to run on multiple browsers")
     group.addoption("--browser-config", dest="browser_config", action="store", default=None,
                     help="Path to configuration.json (optional)")
     group.addoption("--parallel-mode", dest="parallel_mode",
@@ -67,12 +65,12 @@ def _flatten(items):
 def _resolve_browser_cli(config: Config) -> list[str]:
     Logger.debug("Resolving browser CLI options")
     try:
-        multi = config.getoption("browsers", default=None)
-        single = config.getoption("browser", default=None)
+        multi = config.getoption("--browsers", default=None)
+        single = config.getoption("--browser", default=None)
         if multi:
             browsers = _flatten(multi)
             Logger.info(f"Resolved browsers: {browsers}")
-            return browsers or ["chrome"]
+            return browsers
         if single:
             Logger.info(f"Resolved single browser: {single}")
             return [str(single).strip().lower()]
@@ -89,7 +87,7 @@ def _resolve_browser_cli(config: Config) -> list[str]:
 def pytest_generate_tests(metafunc):
     if "browser_name" not in metafunc.fixturenames:
         return
-    mode = metafunc.config.getoption("parallel_mode")
+    mode = metafunc.config.getoption("--parallel-mode")
     if mode != "per-test":
         return
     browsers = _resolve_browser_cli(metafunc.config)
@@ -110,7 +108,7 @@ def cfg(pytestconfig):
 @pytest.fixture(scope="session")
 def browser_name(request, worker_id):
     """Determine browser name based on CLI options and parallel mode."""
-    mode = request.config.getoption("parallel_mode")
+    mode = request.config.getoption("--parallel-mode")
     if mode == "per-test":
         return request.param
 
@@ -184,4 +182,3 @@ def hard_asserts() -> AssertionInterface:
 def soft_asserts() -> AssertionInterface:
     """Provide automatic Soft Asserts for every test case."""
     yield SoftAsserts()
-

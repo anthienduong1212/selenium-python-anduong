@@ -109,17 +109,9 @@ class BrowserProvider(ABC):
         - block by browser: args/prefs/capabilities
         - authorize vendor keys to subclass
         """
-        data = self.config.json_global()
         block = self.config.json_browser_block(self.config.browser)
 
         Logger.info("Applying overrides from JSON configuration...")
-        caps = data.get("capabilities")
-        if isinstance(caps, dict):
-            for k, v in caps.items():
-                try:
-                    options.set_capability(k, v)
-                except Exception as e:
-                    Logger.warning(f"Could not set global capability {k}: {e}")
 
         # per-browser block (args/prefs/caps)
         if isinstance(block, dict):
@@ -136,9 +128,9 @@ class BrowserProvider(ABC):
             except Exception as e:
                 Logger.warning(f"Could not apply browser prefs: {e}")
 
-        caps2 = block.get("capabilities")
-        if isinstance(caps2, dict):
-            for k, v in caps2.items():
+        caps = block.get("capabilities")
+        if isinstance(caps, dict):
+            for k, v in caps.items():
                 try:
                     options.set_capability(k, v)
                 except Exception as e:

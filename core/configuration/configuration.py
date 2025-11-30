@@ -63,6 +63,7 @@ class Configuration:
     header_offset_px: int = env_int("HEADER_OFFSET_PX", 0) or 0
     scroll_backend: str = os.getenv("SCROLL_BACKEND", "js")  # js | wheel | move
 
+    per_browser_remote_url: Optional[Dict[str, str]] = field(default_factory=dict)
     _json_data: Dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
 
     # ================================
@@ -125,6 +126,8 @@ class Configuration:
         for key in cfg.to_dict().keys():
             if key in json_data:
                 updates[key] = json_data[key]
+
+        updates['_json_data'] = deepcopy(json_data)
 
         cfg = dc_replace(cfg, **updates)
 

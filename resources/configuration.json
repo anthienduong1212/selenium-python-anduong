@@ -1,5 +1,4 @@
 {
-  "capabilities": { "acceptInsecureCerts": true },
   "chrome": {
     "args": ["--disable-gpu"],
     "prefs": {

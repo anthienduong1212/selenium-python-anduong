@@ -316,7 +316,7 @@ class Element:
 
     def should(self, *conditions: Condition, timeout_ms: Optional[int] = None) -> "Element":
         """Wait until a specific condition is met for the element."""
-        timeout_s = timeout_ms / 1000.0 if timeout_ms else self.waiter.timeout_s
+        timeout_s = (timeout_ms / 1000.0) if timeout_ms else self.waiter.timeout_s
 
         assert timeout_s > 0, "Timeout for 'should' condition must be greater than zero."
 
