@@ -8,7 +8,7 @@ class Logger:
     _logger: Optional[logging.Logger] = None
 
     @classmethod
-    def _setup_logging(cls):
+    def setup_logging(cls):
         """
         Configure the main logger for the application.
         Read the log level from the LOG_LEVEL environment variable (default is INFO).

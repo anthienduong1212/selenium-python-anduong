@@ -48,6 +48,7 @@ class ResultPage(BasePage):
 
         for i in range(n):
             card = cards.get(i)
+            card.scroll_into_view("wheel")
             name_el = card.find(self.LBL_HOTEL_INFORMATION_NAME)
             addr_el = card.find(self.LBL_HOTEL_ADDRESS)
 
@@ -79,7 +80,7 @@ class ResultPage(BasePage):
             if not contains_text(data.get("address"), city):
                 mismatched_cities.append(i)
 
-        return False if len(mismatched_cities) > 0 else True
+        return mismatched_cities
 
     @allure.step("Filter {filter_name} with available option")
     def filter_with_term(self, filter_name: str, filters: List[Dict[str, str]]):
@@ -94,7 +95,7 @@ class ResultPage(BasePage):
 
                 parent = self.el(self.LBL_FILTER(filter_name=filter_name)).should_be(cond_visible())
                 child = parent.find(self.OPT_FILTER_OPTION(option_name=option))
-                child.scroll_into_view()
+                child.scroll_into_view("wheel")
                 child.click()
             else:
                 Logger.error(f"Filter {filter_name} not found")

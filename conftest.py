@@ -15,6 +15,8 @@ from core.assertion.soft_asserts import SoftAsserts
 from core.configuration.configuration import Configuration
 from core.driver.driver_manager import DriverManager
 from core.logging.logging import Logger
+Logger.setup_logging()
+
 from core.report.reporting import AllureReporter
 
 
@@ -65,12 +67,12 @@ def _flatten(items):
 def _resolve_browser_cli(config: Config) -> list[str]:
     Logger.debug("Resolving browser CLI options")
     try:
-        multi = config.getoption("--browsers", default=None)
-        single = config.getoption("--browser", default=None)
+        multi = config.getoption("browsers", default=None)
+        single = config.getoption("browser", default=None)
         if multi:
             browsers = _flatten(multi)
             Logger.info(f"Resolved browsers: {browsers}")
-            return browsers
+            return browsers or ["chrome"]
         if single:
             Logger.info(f"Resolved single browser: {single}")
             return [str(single).strip().lower()]
@@ -145,6 +147,9 @@ def driver(request, browser_name, cfg) -> object:
         except Exception as e:
             Logger.error(f"Error while quitting driver: {e}")
 
+        DriverManager.reset_context()
+        Logger.debug("Driver context reset successfully.")
+
 
 @pytest.fixture(scope="session", autouse=True)
 def _allure_env():
@@ -160,12 +165,11 @@ def pytest_runtest_makereport(item, call):
     outcome = yield
     rep = outcome.get_result()
     if rep.when == "call" and rep.failed:
-        drv = item.funcargs.get("driver")
-        if drv:
-            try:
-                AllureReporter.attach_page_screenshot(drv, name=f"{item.name} - failed")
-            except Exception:
-                pass
+        try:
+            AllureReporter.attach_page_screenshot(name=f"{item.name} - failed")
+        except Exception:
+            Logger.info("Failed to capture last screenshot")
+            pass
 
 
 # ================================

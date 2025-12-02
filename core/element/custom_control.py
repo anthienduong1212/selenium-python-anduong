@@ -65,7 +65,7 @@ class Calendar:
             return []
 
         for i in range(containers.size()):
-            month = containers.get(i).find(self.cfg.month_caption_in_container).should(cond_visible())
+            month = containers.get(i).find(self.cfg.month_caption_in_container).should_be(cond_visible())
             captions.append(month.text().strip())
             Logger.debug(f"Current month on calendar: {month}")
 

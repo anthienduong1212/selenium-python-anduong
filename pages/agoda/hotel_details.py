@@ -35,27 +35,36 @@ class HotelDetails(BasePage):
     @allure.step("Select {option} on NavBar")
     def select_navbar_option(self, option: NavbarOptions):
         format_option_locator = self.BTN_NAVBAR_OPTION(option=option)
-
-        # Apply this because the parent locator is duplicated but distinct by its child element
         nested_locator = self.NAV_NAVBAR.within(format_option_locator)
         option = self.el(nested_locator).should_be(cond_visible())
         option.click()
 
+    @allure.step("Wait for Room Filter displays")
+    def wait_for_room_filter_display(self) -> "Element":
+        return self.el(self.GRD_ROOM_FILTER).should_be(cond_visible())
+
     @allure.step("Check the {option} display or not")
     def is_option_display(self, option: str):
         self.select_navbar_option(NavbarOptions.ROOMS)
-        room_filter = self.el(self.GRD_ROOM_FILTER).should_be(cond_visible())
-        option = room_filter.find(self.OPT_ROOM_FILTER_OPTION(option=option))
+        parent = self.wait_for_room_filter_display()
 
+        option = parent.find(self.OPT_ROOM_FILTER_OPTION(option=option))
         return option.exists()
 
+    @allure.step("Add hotel to favorite")
     def add_to_favorites(self):
-        self.el(self.BTN_ADD_TO_FAVORITES).should(cond_visible()).click()
+        fav_btn = self.el(self.BTN_ADD_TO_FAVORITES)
+        fav_btn.scroll_into_view("wheel")
+        fav_btn.click()
+
+    @allure.step("Wait for hotel information display")
+    def wait_for_hotel_information_display(self) -> "Element":
+        return self.el(self.TXT_HOTEL_INFO_PARENT).should_be(cond_visible())
 
     @allure.step("Get details of hotel information")
     def get_hotel_information(self) -> dict[str, Any]:
-        parent = self.el(self.TXT_HOTEL_INFO_PARENT).should_be(cond_visible())
-        parent.scroll_into_view()
+        parent = self.wait_for_hotel_information_display()
+        parent.scroll_into_view("wheel")
 
         hotel_name = parent.find(self.TXT_HOTEL_NAME).text()
         hotel_addr = parent.find(self.TXT_HOTEL_ADDRESS).text()

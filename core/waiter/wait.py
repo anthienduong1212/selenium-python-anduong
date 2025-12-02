@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime
 import os
 import time
-from typing import Callable, Iterable, Optional, Type, TypeVar, Union
+from typing import Callable, Sequence, Optional, Type, TypeVar, Union
 
 from selenium.common.exceptions import (NoSuchElementException,
                                         StaleElementReferenceException,
@@ -20,9 +20,8 @@ T = TypeVar("T")
 class TimeoutErrorWithScreenShot(AssertionError):
     """Custom exception raised when a wait condition times out."""
 
-    def __init__(self, message: str, screenshot_path: Optional[str] = None):
+    def __init__(self, message: str):
         super().__init__(message)
-        self.screenshot_path = screenshot_path
 
 
 class Waiter:
@@ -41,7 +40,7 @@ class Waiter:
     def until(self,
               supplier: Callable[[], T],
               on_timeout: Callable[[], str],
-              ignored_exceptions: Optional[Iterable[Type[BaseException]]] = (
+              ignored_exceptions: Sequence[Type[BaseException]] = (
                       NoSuchElementException,
                       StaleElementReferenceException),
               ) -> T:
@@ -54,10 +53,10 @@ class Waiter:
             try:
                 polls += 1
                 value = supplier()
-                if value:  # Return if truthy
+                if value:
                     return value
             except BaseException as e:
-                if ignored_exceptions and isinstance(e, tuple(ignored_exceptions)):
+                if isinstance(e, tuple(ignored_exceptions)):
                     last_exc = e
                 else:
                     raise
@@ -66,28 +65,22 @@ class Waiter:
                 break
             time.sleep(self.poll_s)
 
-        driver = DriverManager.get_current_driver()
-        if driver is not None:
-            try:
-                AllureReporter.attach_page_screenshot(driver, name="Timeout Screenshot")
-            except Exception as e:
-                Logger.info(f"Failed to attach screenshot via AllureReporter: {e}")
-
         detail = on_timeout()
         elapsed = max(0.0, self.timeout_s)
-
-        msg = f"Timeout after {elapsed:.3f}s (polls={polls}): \n{detail}"
+        msg = f"Timeout after {elapsed:.3f}s (polls={polls}): \n{on_timeout()}"
 
         if last_exc:
-            msg += f"\nLast error: {type(last_exc).__name__}: {last_exc}"
+            Logger.error(f"Waiting failed due to last exception. Details: {detail}")
+            raise last_exc
 
-        raise TimeoutErrorWithScreenShot(msg)
+        AllureReporter.attach_page_screenshot(name="Timeout Screenshot")
+        AllureReporter.attach_text(msg, str(BaseException))
 
     def until_not(
             self,
             predicate: Callable[[], bool],
             on_timeout: Callable[[], str],
-            ignored_exceptions: Optional[Iterable[Type[BaseException]]] = (NoSuchElementException,
+            ignored_exceptions: Optional[Sequence[Type[BaseException]]] = (NoSuchElementException,
                                                                            StaleElementReferenceException),
     ) -> bool:
         return self.until(lambda: not predicate(), on_timeout, ignored_exceptions)

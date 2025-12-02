@@ -133,13 +133,13 @@ class Element:
             Logger.error(f"Error checking viewport status for {self.name}: {e}")
             return False
 
-    def scroll_into_view(self):
+    def scroll_into_view(self, backend: Optional[str] = None):
         """Scroll the element into the visible part of the screen."""
         if self.is_in_viewport():
             return
 
         el = self.resolve()
-        backend = getattr(self.config, "scroll_backend", "js")
+        backend = backend if backend else getattr(self.config, "scroll_backend", "js")
         block = getattr(self.config, "scroll_block", "center")
         header_offset = getattr(self.config, "header_offset_px", 0)
 
@@ -184,20 +184,23 @@ class Element:
     def click(self) -> "Element":
         """Click on the element."""
         with AllureReporter.step(f"Click on element {self.name}"):
-            self.should(cond_visible())
+            self.should_be(cond_visible())
             try:
                 self.resolve().click()
+
             except ElementClickInterceptedException:
                 Logger.info(f"Click intercepted. Waiting for click ability on {self.name}.")
+
                 timeout_ms = max(500, self.config.polling_interval_ms * 4)
-                self.should(click_ready(), timeout_ms=timeout_ms)
+                self.should_be(click_ready(), timeout_ms=timeout_ms)
+
                 self.resolve().click()
             return self
 
     def type(self, text: str, clear: bool = True) -> "Element":
         """Type text into an input element."""
         with AllureReporter.step(f"Type {text} in to {self.name}"):
-            self.should(cond_visible())
+            self.should_be(cond_visible())
             el = self.resolve()
             if clear:
                 try:
@@ -224,7 +227,7 @@ class Element:
     def hover(self) -> "Element":
         """Clear the text of an input element."""
         with AllureReporter.step(f"Hover mouse to {self.name}"):
-            self.should(cond_visible())
+            self.should_be(cond_visible())
             self.scroll_into_view()
             ActionChains(self._driver()).move_to_element(self.resolve()).perform()
             return self
@@ -311,17 +314,17 @@ class Element:
                 return False
 
     # ================================
-    #      Waiting / Assertions
+    #            WAITING
     # ================================
 
-    def should(self, *conditions: Condition, timeout_ms: Optional[int] = None) -> "Element":
+    def should_be(self, *conditions: Condition, timeout_ms: Optional[int] = None) -> "Element":
         """Wait until a specific condition is met for the element."""
         timeout_s = (timeout_ms / 1000.0) if timeout_ms else self.waiter.timeout_s
 
         assert timeout_s > 0, "Timeout for 'should' condition must be greater than zero."
 
         if not conditions:
-            Logger.debug(f"Calling should() with no conditions for element: {self.name}")
+            Logger.debug(f"Calling should_be() with no conditions for element: {self.name}")
             return self
 
         temp_wait = self.waiter
@@ -340,7 +343,7 @@ class Element:
                 return False
 
         def _on_timeout() -> str:
-            Logger.info("Condition was not met within the timeout period.")
+            Logger.error(f"Condition [{self.name}] of was not met within the timeout period.")
             snapshot = "<not present>"
             try:
                 el = self._find_now()
@@ -353,17 +356,15 @@ class Element:
 
         try:
             temp_wait.until(_condition_checker, _on_timeout)
-            Logger.debug(f"Condition met for {desc}")
+            Logger.debug(f"Condition met for {self.name}")
             return self
-        except TimeoutException as e:
+
+        except BaseException as e:
             spath = getattr(e, "screenshot_path", None)
             if spath:
                 AllureReporter.attach_file(spath, f"FAILED - {self.name}", "image/png")
             AllureReporter.attach_text("Locator", str(self.locator))
             raise
-
-    def should_be(self, *conditions: Condition, timeout_ms: Optional[int] = None) -> "Element":
-        return self.should(*conditions, timeout_ms=timeout_ms)
 
 
 # ================================

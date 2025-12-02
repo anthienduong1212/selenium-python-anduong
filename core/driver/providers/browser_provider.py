@@ -31,7 +31,8 @@ class BrowserProvider(ABC):
         """Initialize driver: apply common settings and select local/remote mode"""
         Logger.info("Creating WebDriver instance...")
         options = self.build_options()
-        self.apply_common_settings(options)
+
+        self._apply_common_settings(options)
         self._apply_overrides_from_json(options)
 
         remote_url = self.config.remote_url
@@ -56,18 +57,23 @@ class BrowserProvider(ABC):
     #         COMMON SETTINGS
     # ================================
 
-    def apply_common_settings(self, options: Any):
+    def _apply_common_settings(self, options: Any):
         Logger.info("Applying common browser settings...")
+
         if self.config.headless:
             Logger.info(f"Headless mode: {self.config.headless}")
             self._add_headless(options)
 
-        if self.config.maximize and not self.config.headless:
-            self._add_args(options, "--start-maximized")
-            Logger.info("Start maximized")
-        else:
             self._add_args(options, f"--window-size={self.config.window_width},{self.config.window_height}")
             Logger.info(f"Window size: {self.config.window_width}x{self.config.window_height}")
+
+        else:
+            if self.config.maximize:
+                self._add_args(options, "--start-maximized")
+                Logger.info("Start maximized")
+            else:
+                self._add_args(options, f"--window-size={self.config.window_width},{self.config.window_height}")
+                Logger.info(f"Window size: {self.config.window_width}x{self.config.window_height}")
 
     # ================================
     #         HELPER HOOKS

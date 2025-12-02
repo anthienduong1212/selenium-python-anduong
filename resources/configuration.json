@@ -2,11 +2,9 @@
   "chrome": {
     "args": ["--disable-gpu"],
     "prefs": {
-      "download.default_directory": "C:/Downloads",
-      "profile.default_content_settings.popups": 0
     },
     "capabilities": {
-      "pageLoadStrategy": "normal"
+      "pageLoadStrategy": "eager"
     }
   },
   "edge": {
@@ -22,9 +20,6 @@
   },
   "firefox": {
     "prefs": {
-      "browser.download.dir": "C:/Downloads",
-      "browser.download.folderList": 2,
-      "browser.helperApps.neverAsk.saveToDisk": "application/pdf"
     },
     "capabilities": {
     },

@@ -10,7 +10,7 @@ from mailslurp_client import ApiClient, Configuration
 from mailslurp_client.api.inbox_controller_api import InboxControllerApi
 from mailslurp_client.models import CreateInboxDto
 
-from core.driver.driver_manager import DriverManager
+from core.logging.logging import Logger
 
 DEFAULT_TIMEOUT_MS = int(os.getenv("MAILSLURP_TIMEOUT_MS", "60000"))
 OPT_REGEX = os.getenv("OTP_REGEX", r"\b(\d{6})\b")
@@ -22,7 +22,7 @@ class SlurpMailUtil:
                  mail_timeout_ms: int = DEFAULT_TIMEOUT_MS):
 
         mail_cfg = mailslurp_client.Configuration()
-        mail_cfg.api_key["x-api-key"] = api_key or os.environ["MAILSLURP_API_KEY"]
+        mail_cfg.api_key["x-api-key"] = api_key
 
         self.client = ApiClient(mail_cfg)
         self.inbox_api = mailslurp_client.InboxControllerApi(self.client)
@@ -40,7 +40,6 @@ class SlurpMailUtil:
         while True:
             page_result = self.inbox_api.get_all_inboxes(page=page, size=50, sort="DESC")
             for dto in page_result.content:
-                # dto.expires_at là ISO 8601 hoặc None
                 exp = dto.expires_at
                 still_valid = (exp is None) or (exp > now)
                 name_ok = (name_prefix is None) or (dto.name or "").startswith(name_prefix)
@@ -55,15 +54,16 @@ class SlurpMailUtil:
     def create_inbox(self, expires_in_minutes: int = 30) -> tuple[str, str]:
         """Create an inbox for 1 test. Delete after N minutes"""
 
-        # Find an active inbox with active prefix "otp_"
         candidates = self.list_active_inbox(name_prefix="otp_")
         if candidates:
+            Logger.info("Found active inbox")
             return candidates[0]
 
         opts = CreateInboxDto()
         opts.name = f"otp_{datetime.now(timezone.utc).isoformat()}"
         opts.expires_at = datetime.now(timezone.utc) + timedelta(minutes=expires_in_minutes)
         inbox = self.inbox_api.create_inbox_with_options(opts)
+        Logger.info(f"Inbox created successful with ID: {inbox.id} and email: {inbox.email_address}")
         return str(inbox.id), str(inbox.email_address)
 
     def wait_for_otp(self,

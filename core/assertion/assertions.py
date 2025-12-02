@@ -26,11 +26,7 @@ class AssertionInterface(ABC):
     def assert_between(self, num: float, lo: float, hi: float, inclusive: bool = True,
                        msg: Optional[str] = None) -> None: pass
 
-    def assert_raises(self, fn: Callable, exc: type[BaseException]) -> BaseException:
-        """Expect the function to throw an exception; return the exception to continue asserting the property."""
-        with pytest.raises(exc) as exc_info:
-            fn()
-        return exc_info.value
+
 
 
 

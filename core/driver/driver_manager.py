@@ -162,27 +162,19 @@ class DriverManager:
     @classmethod
     def _post_create_setup(cls, driver: WebDriver, cfg: Configuration) -> None:
         """Setup after create WebDriver: timeout, windows size, implicit wait"""
-        implicit_ms = int(getattr(cfg, "implicit_wait_ms", 0) or 0)
-        if implicit_ms > 0:
-            driver.implicit_wait(implicit_ms / 1000.0)
-
-        try:
-            if getattr(cfg, "maximize", False):
-                driver.maximize_window()
-            else:
-                w = getattr(cfg, "window_width", None)
-                h = getattr(cfg, "window_height", None)
-                if w and h:
-                    driver.set_window_size(int(w), int(h))
-        except (NoSuchWindowException, WebDriverException) as e:
-            Logger.error(f"Error when settings windows size: {e}")
 
         try:
             pl_ms = getattr(cfg, "page_load_timeout_ms", None)
-            if pl_ms and hasattr(driver, "set_page_load_timeout"):
-                driver.set_page_load_timeout(max(0.0, pl_ms / 1000.0))
+            if pl_ms is not None:
+                timeout_seconds = max(0.0, pl_ms / 1000.0)
+                driver.set_page_load_timeout(timeout_seconds)
+                Logger.info(f"Set page load timeout to {timeout_seconds}s")
         except TimeoutException as e:
             Logger.error(f"Error when settings page load timeout: {e}")
+
+        implicit_ms = int(getattr(cfg, "implicit_wait_ms", 0) or 0)
+        if implicit_ms > 0:
+            driver.implicit_wait(implicit_ms / 1000.0)
 
 
 # Register cleanup when program end

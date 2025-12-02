@@ -6,7 +6,7 @@ from abc import ABC
 import allure
 from typing import Any, Callable, Iterable, Mapping, Optional
 
-from core.assertion.assertions import AssertionInterface
+from core.assertion.base_assertion import BaseAssertion
 from core.logging.logging import Logger
 from core.report.reporting import AllureReporter
 
@@ -16,13 +16,13 @@ def _attach_json_allure(title: str, data: Any) -> None:
     AllureReporter.attach_json(name=title, data=data, pretty=True)
 
 
-class HardAsserts(AssertionInterface, ABC):
+class HardAsserts(BaseAssertion):
     def assert_equal(self, actual: Any, expected: Any, msg: str) -> None:
         """Compare equal"""
 
         description = f"{msg} | Expected: {expected!r}, Actual: {actual!r}"
 
-        with AllureReporter.step(f"{description}"):
+        with self.assertion_step(f"Assert equal: {description}"):
             _attach_json_allure("Expected vs Actual", {"expected": expected, "actual": actual})
 
             try:
@@ -38,7 +38,7 @@ class HardAsserts(AssertionInterface, ABC):
 
         description = f"{msg} |Condition: {expr}"
 
-        with AllureReporter.step(f"Assert true: {description}"):
+        with self.assertion_step(f"Assert true: {description}"):
             try:
                 assert expr, description
                 Logger.info(f"PASS: {description}")
@@ -52,7 +52,7 @@ class HardAsserts(AssertionInterface, ABC):
 
         description = f"{msg} |Condition: {expr}"
 
-        with AllureReporter.step(f"Assert false: {description}"):
+        with self.assertion_step(f"Assert false: {description}"):
             try:
                 assert not expr, description
                 Logger.info(f"PASS: {description}")
@@ -66,7 +66,7 @@ class HardAsserts(AssertionInterface, ABC):
 
         description = f"{msg} |{member!r} not found in container"
 
-        with AllureReporter.step(f"{description}"):
+        with self.assertion_step(f"{description}"):
             try:
                 assert member in container, description
                 Logger.info(f"PASS: {description}")
@@ -82,7 +82,7 @@ class HardAsserts(AssertionInterface, ABC):
 
         description = f"{msg} |{member!r} unexpectedly found in container"
 
-        with AllureReporter.step(f"Assert not in: {description}"):
+        with self.assertion_step(f"Assert not in: {description}"):
             try:
                 assert member not in container, description
                 Logger.info(f"PASS: {description}")
@@ -97,9 +97,9 @@ class HardAsserts(AssertionInterface, ABC):
         """Assert that the object has the expected length."""
 
         actual_len = len(obj)
-        description = f"{msg} |Length mismatch. Expected: {expected_len}, Actual: {actual_len}"
+        description = f"{msg} | Expected: {expected_len}, Actual: {actual_len}"
 
-        with AllureReporter.step(f"Assert length: {description}"):
+        with self.assertion_step(f"Assert length: {description}"):
             try:
                 assert actual_len == expected_len, description
                 Logger.info(f"PASS: {description}")
@@ -115,7 +115,7 @@ class HardAsserts(AssertionInterface, ABC):
         is_in_range = (lo <= num <= hi) if inclusive else (lo < num < hi)
         description = f"{msg} |{num} not in range [{lo}, {hi}{']' if inclusive else ')'}]"
 
-        with AllureReporter.step(f"Assert between: {description}"):
+        with self.assertion_step(f"Assert between: {description}"):
             try:
                 assert is_in_range, description
                 Logger.info(f"PASS: {description}")

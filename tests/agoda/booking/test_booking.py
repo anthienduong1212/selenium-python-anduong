@@ -29,7 +29,7 @@ class TestBooking:
         home_page.search_for_hotel(booking_data)
 
         mismatches = result_page.checking_hotel_address_from_search(5, booking_data.destination)
-        hard_asserts.assert_true(mismatches, "Verify that there is no hotel with mismatched destination")
+        hard_asserts.assert_len(mismatches, 0, "Verify that there is no hotel with mismatched destination")
 
         result_page.filter_with_term(FiltersName.ROOM_OFFERS, booking_data.filters)
 
@@ -54,10 +54,11 @@ class TestBooking:
                                  "Verify that hotel room offer this service")
 
     @pytest.mark.parametrize("booking_data", ["test_tc02"], indirect=True)
-    def test_tc02(self, booking_data: BookingData, hard_asserts, soft_asserts):
+    def test_tc02(self, booking_data: BookingData, hard_asserts, soft_asserts, otp_mailbox):
         home_page = HomePage()
         result_page = ResultPage()
         hotel_detail_page = HotelDetails()
+        login_page = LoginPage()
 
         AR.set_title("Add hotel into Favourite successfully")
 
@@ -65,7 +66,7 @@ class TestBooking:
         home_page.search_for_hotel(booking_data)
 
         mismatches = result_page.checking_hotel_address_from_search(5, booking_data.destination)
-        hard_asserts.assert_true(mismatches, "Verify that there is no hotel with mismatched destination")
+        hard_asserts.assert_len(mismatches, 0, "Verify that there is no hotel with mismatched destination")
 
         result_page.filter_with_term(FiltersName.PROPERTIES_FACILITIES, booking_data.filters)
 
@@ -88,6 +89,12 @@ class TestBooking:
 
         soft_asserts.assert_true(hotel_detail_page.is_option_display("Swimming pool"),
                                  "Verify that hotel room offer this service")
+
+        hotel_detail_page.add_to_favorites()
+
+        email_address = otp_mailbox["email"]
+
+        login_page.login(email_address)
 
 
 

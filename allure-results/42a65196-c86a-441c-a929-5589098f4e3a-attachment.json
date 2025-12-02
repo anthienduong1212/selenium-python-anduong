@@ -1,0 +1,326 @@
+[
+  {
+    "level": "SEVERE",
+    "message": "https://www.agoda.com/?ds=AO%2B1VeEi7mVsCuZP - Not signed in with the identity provider.",
+    "source": "other",
+    "timestamp": 1764692018604
+  },
+  {
+    "level": "WARNING",
+    "message": "https://connect.facebook.net/en_US/fbevents.js 167:508 \"[Meta Pixel] - Duplicate Pixel ID: 446731502144130.\"",
+    "source": "console-api",
+    "timestamp": 1764692020685
+  },
+  {
+    "level": "SEVERE",
+    "message": "https://z.moatads.com/pricelinedfp36414660041/moatad.js#moatClientLevel1=11479671&moatClientLevel2=3898945410&moatClientLevel3=7154690089&moatClientLevel4=138539061494&moatClientSlicer1=21868668580&moatClientSlicer2=21915805409&zMoatPS= - Failed to load resource: net::ERR_NAME_NOT_RESOLVED",
+    "source": "network",
+    "timestamp": 1764692021486
+  },
+  {
+    "level": "WARNING",
+    "message": "https://cdn6.agoda.net/cdn-activities/dist/release/1/1.6.83/assets/vendor-2184-6d3cf06c2e8427c9.js 0:749123 \"Capacitor plugin \\\"Navigation\\\" already registered. Cannot register plugins twice.\"",
+    "source": "console-api",
+    "timestamp": 1764692025960
+  },
+  {
+    "level": "WARNING",
+    "message": "https://www.agoda.com/search?guid=aecbe67d-9f23-4774-9b6b-e88d321db439&lastSearchedCity=0&asq=u2qcKLxwzRU5NDuxJ0kOF3T91go8JoYYMxAgy8FkBH1BN0lGAtYH25sdXoy34qb9YQO3f4%2B94ZxeQYhk4dhndLETmvrXDIppfgee7x%2FlLc0nVj9Ohwm5gj%2BLUZvPqj2BdKT8zx5W5BioMdUuG%2F%2Fqgz%2BE2QAmBkdVgg%2FLzuwnKpmA7qpU9XFDUqXXm0XT2n6zW6v%2B1z7ngi%2Fh%2BcIMzh%2Fx3w%3D%3D&city=15932&tick=639003140227&locale=en-us&ckuid=43e9ca21-451b-4ab4-9244-76379242891b&prid=0&currency=VND&correlationId=3ef7b82d-151e-477c-a8ef-bdb67842d1d2&analyticsSessionId=-2338751604579881616&pageTypeId=1&realLanguageId=1&languageId=1&origin=VN&stateCode=HN&cid=-1&userId=43e9ca21-451b-4ab4-9244-76379242891b&whitelabelid=1&loginLvl=0&storefrontId=3&currencyId=78&currencyCode=VND&htmlLanguage=en-us&cultureInfoName=en-us&machineName=hk-pc-2h-acm-web-user-55599f679b-ppxm4&trafficGroupId=4&trafficSubGroupId=4&aid=130243&useFullPageLogin=true&cttp=4&isRealUser=true&mode=production&browserFamily=Chrome&cdnDomain=agoda.net&checkIn=2025-12-05&checkOut=2025-12-08&rooms=2&adults=4&children=0&priceCur=VND&los=3&textToSearch=Dalat&productType=-1&travellerType=3&familyMode=off - Mixed Content: The page at 'https://www.agoda.com/search?guid=aecbe67d-9f23-4774-9b6b-e88d321db439&lastSearchedCity=0&asq=u2qcKLxwzRU5NDuxJ0kOF3T91go8JoYYMxAgy8FkBH1BN0lGAtYH25sdXoy34qb9YQO3f4%2B94ZxeQYhk4dhndLETmvrXDIppfgee7x%2FlLc0nVj9Ohwm5gj%2BLUZvPqj2BdKT8zx5W5BioMdUuG%2F%2Fqgz%2BE2QAmBkdVgg%2FLzuwnKpmA7qpU9XFDUqXXm0XT2n6zW6v%2B1z7ngi%2Fh%2BcIMzh%2Fx3w%3D%3D&city=15932&tick=639003140227&locale=en-us&ckuid=43e9ca21-451b-4ab4-9244-76379242891b&prid=0&currency=VND&correlationId=3ef7b82d-151e-477c-a8ef-bdb67842d1d2&analyticsSessionId...1&userId=43e9ca21-451b-4ab4-9244-76379242891b&whitelabelid=1&loginLvl=0&storefrontId=3&currencyId=78&currencyCode=VND&htmlLanguage=en-us&cultureInfoName=en-us&machineName=hk-pc-2h-acm-web-user-55599f679b-ppxm4&trafficGroupId=4&trafficSubGroupId=4&aid=130243&useFullPageLogin=true&cttp=4&isRealUser=true&mode=production&browserFamily=Chrome&cdnDomain=agoda.net&checkIn=2025-12-05&checkOut=2025-12-08&rooms=2&adults=4&children=0&priceCur=VND&los=3&textToSearch=Dalat&productType=-1&travellerType=3&familyMode=off' was loaded over HTTPS, but requested an insecure element 'http://cdn0.agoda.net/images/emailmarketing/Web_SSR_banner/webbanner_coupon.png'. This request was automatically upgraded to HTTPS, For more information see https://blog.chromium.org/2019/10/no-more-mixed-messages-about-https.html",
+    "source": "security",
+    "timestamp": 1764692026962
+  },
+  {
+    "level": "SEVERE",
+    "message": "https://www.agoda.com/search?guid=aecbe67d-9f23-4774-9b6b-e88d321db439&lastSearchedCity=0&asq=u2qcKLxwzRU5NDuxJ0kOF3T91go8JoYYMxAgy8FkBH1BN0lGAtYH25sdXoy34qb9YQO3f4%2B94ZxeQYhk4dhndLETmvrXDIppfgee7x%2FlLc0nVj9Ohwm5gj%2BLUZvPqj2BdKT8zx5W5BioMdUuG%2F%2Fqgz%2BE2QAmBkdVgg%2FLzuwnKpmA7qpU9XFDUqXXm0XT2n6zW6v%2B1z7ngi%2Fh%2BcIMzh%2Fx3w%3D%3D&city=15932&tick=639003140227&locale=en-us&ckuid=43e9ca21-451b-4ab4-9244-76379242891b&prid=0&currency=VND&correlationId=3ef7b82d-151e-477c-a8ef-bdb67842d1d2&analyticsSessionId=-2338751604579881616&pageTypeId=1&realLanguageId=1&languageId=1&origin=VN&stateCode=HN&cid=-1&userId=43e9ca21-451b-4ab4-9244-76379242891b&whitelabelid=1&loginLvl=0&storefrontId=3&currencyId=78&currencyCode=VND&htmlLanguage=en-us&cultureInfoName=en-us&machineName=hk-pc-2h-acm-web-user-55599f679b-ppxm4&trafficGroupId=4&trafficSubGroupId=4&aid=130243&useFullPageLogin=true&cttp=4&isRealUser=true&mode=production&browserFamily=Chrome&cdnDomain=agoda.net&checkIn=2025-12-05&checkOut=2025-12-08&rooms=2&adults=4&children=0&priceCur=VND&los=3&textToSearch=Dalat&productType=-1&travellerType=3&familyMode=off&ds=AO%2B1VeEi7mVsCuZP - Not signed in with the identity provider.",
+    "source": "other",
+    "timestamp": 1764692030067
+  },
+  {
+    "level": "WARNING",
+    "message": "https://cdn6.agoda.net/cdn-activities/dist/release/1/1.6.83/assets/vendor-2184-6d3cf06c2e8427c9.js 0:1396859 \"The web-vitals \\\"base+polyfill\\\" build is deprecated. See: https://bit.ly/3aqzsGm\"",
+    "source": "console-api",
+    "timestamp": 1764692030283
+  },
+  {
+    "level": "WARNING",
+    "message": "https://www.googletagmanager.com/gtm.js?id=GTM-5TXL8JK&gtm_auth=&gtm_preview=&gtm_cookies_win=x 537 Failed to execute 'postMessage' on 'DOMWindow': The target origin provided ('https://www.google.com') does not match the recipient window's origin ('https://www.agoda.com').",
+    "source": "security",
+    "timestamp": 1764692031292
+  },
+  {
+    "level": "WARNING",
+    "message": "https://www.googletagmanager.com/gtm.js?id=GTM-5TXL8JK&gtm_auth=&gtm_preview=&gtm_cookies_win=x 537 Failed to execute 'postMessage' on 'DOMWindow': The target origin provided ('https://www.youtube.com') does not match the recipient window's origin ('https://www.agoda.com').",
+    "source": "security",
+    "timestamp": 1764692031292
+  },
+  {
+    "level": "WARNING",
+    "message": "https://www.googletagmanager.com/gtm.js?id=GTM-5TXL8JK&gtm_auth=&gtm_preview=&gtm_cookies_win=x 537 Failed to execute 'postMessage' on 'DOMWindow': The target origin provided ('https://m.youtube.com') does not match the recipient window's origin ('https://www.agoda.com').",
+    "source": "security",
+    "timestamp": 1764692031292
+  },
+  {
+    "level": "WARNING",
+    "message": "https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js 18:447924 \"[GPT] Error in googletag.display: could not find div with id \\\"div-gpt-ad-1581656036918-0\\\" in DOM for slot: /3102/Agoda.com_Hotels/Agoda_hotel_SSR_300x250.\\nhttps://goo.gle/gpt-message#23\"",
+    "source": "console-api",
+    "timestamp": 1764692031463
+  },
+  {
+    "level": "WARNING",
+    "message": "https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js 18:447924 \"[GPT] Error in googletag.display: could not find div with id \\\"div-gpt-ad-1581656089300-0\\\" in DOM for slot: /3102/Agoda.com_Hotels/Agoda_hotel_SSR_300x600.\\nhttps://goo.gle/gpt-message#23\"",
+    "source": "console-api",
+    "timestamp": 1764692031464
+  },
+  {
+    "level": "WARNING",
+    "message": "https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js 18:447924 \"[GPT] Error in googletag.display: could not find div with id \\\"ads-ssr-horizontal-desktop-slot-native\\\" in DOM for slot: /3102/Agoda.com_Hotels/Agoda_hotel_Desktop_SSR_Native.\\nhttps://goo.gle/gpt-message#23\"",
+    "source": "console-api",
+    "timestamp": 1764692031465
+  },
+  {
+    "level": "WARNING",
+    "message": "https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js 18:447924 \"[GPT] Error in googletag.display: could not find div with id \\\"ads-ssr-horizontal-desktop-slot-native-2\\\" in DOM for slot: /3102/Agoda.com_Hotels/Agoda_hotel_Desktop_SSR_Native_2.\\nhttps://goo.gle/gpt-message#23\"",
+    "source": "console-api",
+    "timestamp": 1764692031466
+  },
+  {
+    "level": "WARNING",
+    "message": "https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js 18:447924 \"[GPT] Error in googletag.display: could not find div with id \\\"div-gpt-ad-1581656036918-0\\\" in DOM for slot: /3102/Agoda.com_Hotels/Agoda_hotel_SSR_300x250.\\nhttps://goo.gle/gpt-message#23\"",
+    "source": "console-api",
+    "timestamp": 1764692031466
+  },
+  {
+    "level": "WARNING",
+    "message": "https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js 18:447924 \"[GPT] Error in googletag.display: could not find div with id \\\"div-gpt-ad-1581656089300-0\\\" in DOM for slot: /3102/Agoda.com_Hotels/Agoda_hotel_SSR_300x600.\\nhttps://goo.gle/gpt-message#23\"",
+    "source": "console-api",
+    "timestamp": 1764692031466
+  },
+  {
+    "level": "WARNING",
+    "message": "https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js 18:447924 \"[GPT] Error in googletag.display: could not find div with id \\\"ads-ssr-horizontal-desktop-slot-native\\\" in DOM for slot: /3102/Agoda.com_Hotels/Agoda_hotel_Desktop_SSR_Native.\\nhttps://goo.gle/gpt-message#23\"",
+    "source": "console-api",
+    "timestamp": 1764692031466
+  },
+  {
+    "level": "WARNING",
+    "message": "https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js 18:447924 \"[GPT] Error in googletag.display: could not find div with id \\\"ads-ssr-horizontal-desktop-slot-native-2\\\" in DOM for slot: /3102/Agoda.com_Hotels/Agoda_hotel_Desktop_SSR_Native_2.\\nhttps://goo.gle/gpt-message#23\"",
+    "source": "console-api",
+    "timestamp": 1764692031466
+  },
+  {
+    "level": "WARNING",
+    "message": "https://connect.facebook.net/en_US/fbevents.js 167:508 \"[Meta Pixel] - Duplicate Pixel ID: 446731502144130.\"",
+    "source": "console-api",
+    "timestamp": 1764692032099
+  },
+  {
+    "level": "SEVERE",
+    "message": "https://z.moatads.com/pricelinedfp36414660041/moatad.js#moatClientLevel1=4775770224&moatClientLevel2=3670787684&moatClientLevel3=6875491845&moatClientLevel4=138502333539&moatClientSlicer1=21868668580&moatClientSlicer2=21915898788&zMoatPS= - Failed to load resource: net::ERR_NAME_NOT_RESOLVED",
+    "source": "network",
+    "timestamp": 1764692033337
+  },
+  {
+    "level": "SEVERE",
+    "message": "https://z.moatads.com/pricelinedfp36414660041/moatad.js#moatClientLevel1=4775770224&moatClientLevel2=3670787684&moatClientLevel3=6875491845&moatClientLevel4=138502333536&moatClientSlicer1=21868668580&moatClientSlicer2=22733760201&zMoatPS= - Failed to load resource: net::ERR_NAME_NOT_RESOLVED",
+    "source": "network",
+    "timestamp": 1764692033351
+  },
+  {
+    "level": "WARNING",
+    "message": "https://analytics.tiktok.com/i18n/pixel/static/main.MWYyNDJlNWM5MQ.js 0:309463 \"[TikTok Pixel] - Missing \\\"currency\\\" parameter\\nIssue: Events shared are missing a 'currency' parameter. This impacts our ability to receive the value amount correctly, which can affect the accuracy of reporting for your return on ad spend.\\nSuggestion: Go to your source code and include the \\\"currency\\\" parameter. You can check supported currency codes. See https://ads.tiktok.com/help/article/standard-events-parameters?redirected=2 for more information.\"",
+    "source": "console-api",
+    "timestamp": 1764692034032
+  },
+  {
+    "level": "SEVERE",
+    "message": "https://static.tacdn.com/js3/taevents-c.js 0:1030 Uncaught TypeError: Cannot read properties of undefined (reading 'length')",
+    "source": "javascript",
+    "timestamp": 1764692034151
+  },
+  {
+    "level": "SEVERE",
+    "message": "https://static.tacdn.com/js3/taevents-c.js 0:1030 Uncaught TypeError: Cannot read properties of undefined (reading 'length')",
+    "source": "javascript",
+    "timestamp": 1764692034151
+  },
+  {
+    "level": "WARNING",
+    "message": "https://www.agoda.com/activities/search?cityId=15932&cid=1908612 - [GroupMarkerNotSet(crbug.com/242999)!:A8601900B42A0000]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader (about:flags#enable-unsafe-swiftshader) flag to opt in to lower security guarantees for trusted content.",
+    "source": "rendering",
+    "timestamp": 1764692036426
+  },
+  {
+    "level": "SEVERE",
+    "message": "https://img.riskified.com/img/image-l.gif?t=17646920353490.6141165932357654&c=zs7mfmculw9pqeg93xe4imios2o4n&p=s1t7rp&a=43e9ca21-451b-4ab4-9244-76379242891b&o=www.agoda.com_Activities&rt=1764692034277 - Failed to load resource: net::ERR_NAME_NOT_RESOLVED",
+    "source": "network",
+    "timestamp": 1764692038515
+  },
+  {
+    "level": "SEVERE",
+    "message": "https://img.riskified.com/img/image-l.gif?t=17646920343860.8131256976655256&c=zs7mfmculw9pqeg93xe4imios2o4n&p=1twvd7&a=43e9ca21-451b-4ab4-9244-76379242891b&o=www.agoda.com_Activities&rt=1764692034277 - Failed to load resource: net::ERR_NAME_NOT_RESOLVED",
+    "source": "network",
+    "timestamp": 1764692038515
+  },
+  {
+    "level": "SEVERE",
+    "message": "https://www.agoda.com/le-recit-boutique-hotel-de-dalat/hotel/dalat-vn.html?countryId=38&finalPriceView=1&isShowMobileAppPrice=false&cid=-1&numberOfBedrooms=&familyMode=false&adults=4&children=0&rooms=2&maxRooms=0&checkIn=2025-12-5&isCalendarCallout=false&childAges=&numberOfGuest=0&missingChildAges=false&travellerType=3&showReviewSubmissionEntry=false&currencyCode=VND&isFreeOccSearch=false&flightSearchCriteria=[object%20Object]&tspTypes=8&los=3&searchrequestid=008d6b8d-bbeb-4390-80c9-c70c0b2ef0c7 - Not signed in with the identity provider.",
+    "source": "other",
+    "timestamp": 1764692039331
+  },
+  {
+    "level": "WARNING",
+    "message": "https://www.googletagmanager.com/gtm.js?id=GTM-5TXL8JK&gtm_auth=&gtm_preview=&gtm_cookies_win=x 537 Failed to execute 'postMessage' on 'DOMWindow': The target origin provided ('https://www.google.com') does not match the recipient window's origin ('https://www.agoda.com').",
+    "source": "security",
+    "timestamp": 1764692040073
+  },
+  {
+    "level": "WARNING",
+    "message": "https://www.googletagmanager.com/gtm.js?id=GTM-5TXL8JK&gtm_auth=&gtm_preview=&gtm_cookies_win=x 537 Failed to execute 'postMessage' on 'DOMWindow': The target origin provided ('https://www.youtube.com') does not match the recipient window's origin ('https://www.agoda.com').",
+    "source": "security",
+    "timestamp": 1764692040073
+  },
+  {
+    "level": "WARNING",
+    "message": "https://www.googletagmanager.com/gtm.js?id=GTM-5TXL8JK&gtm_auth=&gtm_preview=&gtm_cookies_win=x 537 Failed to execute 'postMessage' on 'DOMWindow': The target origin provided ('https://m.youtube.com') does not match the recipient window's origin ('https://www.agoda.com').",
+    "source": "security",
+    "timestamp": 1764692040074
+  },
+  {
+    "level": "SEVERE",
+    "message": "https://accounts.google.com/gsi/client 74:88 \"[GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token.\"",
+    "source": "console-api",
+    "timestamp": 1764692040542
+  },
+  {
+    "level": "WARNING",
+    "message": "https://connect.facebook.net/en_US/fbevents.js 167:508 \"[Meta Pixel] - Duplicate Pixel ID: 446731502144130.\"",
+    "source": "console-api",
+    "timestamp": 1764692043530
+  },
+  {
+    "level": "WARNING",
+    "message": "https://www.agoda.com/activities/search?cityId=15932&cid=1908612 - The resource https://www.agoda.com/api/cronos/rtaheaderfooter/module was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+    "source": "javascript",
+    "timestamp": 1764692043883
+  },
+  {
+    "level": "WARNING",
+    "message": "https://www.agoda.com/ul/login?appId=dictator&rpcId=dictator-%23universal-login-app-786&initialPath=signin&sdkVersion=5.11.12 - An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing.",
+    "source": "security",
+    "timestamp": 1764692048346
+  },
+  {
+    "level": "SEVERE",
+    "message": "https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js 18:447970 \"[GPT] Error in googletag.defineSlot: Cannot create slot /3102/Agoda.com/agoda_flights_search_results_300x250. Div element \\\"div-gpt-ad-1561996548387-0\\\" is already associated with another slot: /3102/Agoda.com/agoda_flights_search_results_300x250.\\nhttps://goo.gle/gpt-message#28\"",
+    "source": "console-api",
+    "timestamp": 1764692051998
+  },
+  {
+    "level": "SEVERE",
+    "message": "https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js 18:432995 \"Exception in queued GPT command\" TypeError: Cannot read properties of null (reading 'addService')\n    at https://tags.tiqcdn.com/utag/agoda/main2018/prod/utag.922.js?utv=ut4.46.202406261000:9:454\n    at Pv.push (https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js:19:432910)\n    at Pv.<anonymous> (https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js:19:94773)\n    at Qv (https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js:19:135784)\n    at eF.j (https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js:19:619622)\n    at gF (https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js:19:201467)\n    at iF.next (https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js:19:201759)\n    at https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js:19:202172\n    at new Promise (<anonymous>)\n    at jF (https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js:19:202057)",
+    "source": "console-api",
+    "timestamp": 1764692051998
+  },
+  {
+    "level": "SEVERE",
+    "message": "https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js 18:447970 \"[GPT] Exception in googletag.cmd function: TypeError: Cannot read properties of null (reading 'addService').\\nhttps://goo.gle/gpt-message#30\"",
+    "source": "console-api",
+    "timestamp": 1764692051998
+  },
+  {
+    "level": "SEVERE",
+    "message": "https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js 18:447970 \"[GPT] Error in googletag.defineSlot: Cannot create slot /3102/Agoda.com/agoda_flights_search_results_300x600. Div element \\\"div-gpt-ad-1620379430666-0\\\" is already associated with another slot: /3102/Agoda.com/agoda_flights_search_results_300x600.\\nhttps://goo.gle/gpt-message#28\"",
+    "source": "console-api",
+    "timestamp": 1764692051999
+  },
+  {
+    "level": "SEVERE",
+    "message": "https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js 18:432995 \"Exception in queued GPT command\" TypeError: Cannot read properties of null (reading 'addService')\n    at https://tags.tiqcdn.com/utag/agoda/main2018/prod/utag.926.js?utv=ut4.46.202406261000:9:454\n    at Pv.push (https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js:19:432910)\n    at Pv.<anonymous> (https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js:19:94773)\n    at Qv (https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js:19:135784)\n    at eF.j (https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js:19:619622)\n    at gF (https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js:19:201467)\n    at iF.next (https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js:19:201759)\n    at https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js:19:202172\n    at new Promise (<anonymous>)\n    at jF (https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js:19:202057)",
+    "source": "console-api",
+    "timestamp": 1764692051999
+  },
+  {
+    "level": "SEVERE",
+    "message": "https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js 18:447970 \"[GPT] Exception in googletag.cmd function: TypeError: Cannot read properties of null (reading 'addService').\\nhttps://goo.gle/gpt-message#30\"",
+    "source": "console-api",
+    "timestamp": 1764692051999
+  },
+  {
+    "level": "SEVERE",
+    "message": "https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js 18:447970 \"[GPT] Error in googletag.defineSlot: Cannot create slot /3102/Agoda.com/agoda_flights_search_results_728x90. Div element \\\"div-gpt-ad-1561996885761-0\\\" is already associated with another slot: /3102/Agoda.com/agoda_flights_search_results_728x90.\\nhttps://goo.gle/gpt-message#28\"",
+    "source": "console-api",
+    "timestamp": 1764692051999
+  },
+  {
+    "level": "SEVERE",
+    "message": "https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js 18:432995 \"Exception in queued GPT command\" TypeError: Cannot read properties of null (reading 'addService')\n    at https://tags.tiqcdn.com/utag/agoda/main2018/prod/utag.927.js?utv=ut4.46.202406261000:9:454\n    at Pv.push (https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js:19:432910)\n    at Pv.<anonymous> (https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js:19:94773)\n    at Qv (https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js:19:135784)\n    at eF.j (https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js:19:619622)\n    at gF (https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js:19:201467)\n    at iF.next (https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js:19:201759)\n    at https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js:19:202172\n    at new Promise (<anonymous>)\n    at jF (https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js:19:202057)",
+    "source": "console-api",
+    "timestamp": 1764692052000
+  },
+  {
+    "level": "SEVERE",
+    "message": "https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js 18:447970 \"[GPT] Exception in googletag.cmd function: TypeError: Cannot read properties of null (reading 'addService').\\nhttps://goo.gle/gpt-message#30\"",
+    "source": "console-api",
+    "timestamp": 1764692052000
+  },
+  {
+    "level": "SEVERE",
+    "message": "https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js 18:447970 \"[GPT] Error in googletag.defineSlot: Cannot create slot /3102/Agoda.com/agoda_flights_search_results_728x90_2nd_inline. Div element \\\"div-gpt-ad-1561998972342-0\\\" is already associated with another slot: /3102/Agoda.com/agoda_flights_search_results_728x90_2nd_inline.\\nhttps://goo.gle/gpt-message#28\"",
+    "source": "console-api",
+    "timestamp": 1764692052000
+  },
+  {
+    "level": "SEVERE",
+    "message": "https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js 18:432995 \"Exception in queued GPT command\" TypeError: Cannot read properties of null (reading 'addService')\n    at https://tags.tiqcdn.com/utag/agoda/main2018/prod/utag.928.js?utv=ut4.46.202406261000:9:454\n    at Pv.push (https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js:19:432910)\n    at Pv.<anonymous> (https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js:19:94773)\n    at Qv (https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js:19:135784)\n    at eF.j (https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js:19:619622)\n    at gF (https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js:19:201467)\n    at iF.next (https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js:19:201759)\n    at https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js:19:202172\n    at new Promise (<anonymous>)\n    at jF (https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js:19:202057)",
+    "source": "console-api",
+    "timestamp": 1764692052000
+  },
+  {
+    "level": "SEVERE",
+    "message": "https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202511120101/pubads_impl.js 18:447970 \"[GPT] Exception in googletag.cmd function: TypeError: Cannot read properties of null (reading 'addService').\\nhttps://goo.gle/gpt-message#30\"",
+    "source": "console-api",
+    "timestamp": 1764692052000
+  },
+  {
+    "level": "WARNING",
+    "message": "https://connect.facebook.net/en_US/fbevents.js 167:508 \"[Meta Pixel] - Duplicate Pixel ID: 1421633768162016.\"",
+    "source": "console-api",
+    "timestamp": 1764692052040
+  },
+  {
+    "level": "WARNING",
+    "message": "https://www.agoda.com/account/signin.html?ottoken=eyJhbGciOiJBMjU2S1ciLCJlbmMiOiJBMjU2Q0JDLUhTNTEyIn0.L7ea9Et1t3fIsNaw9ORidCUYK47FI0g05A5LfGur9TcnBrwe0UFQCRP4XEDLDiQJjevZA6Ft-WDxPXYmyJ1duPhKuFT4Jd_F.6kuTBOepFhSEicShuG7bxw.DuhDk__tyaotUt_tDCxX5FSEmj_moX-NkgcNKasXSehmZThzbVlcFKI-rFU_fz_7.jInW90CZ4PWlxVJELdd0ErTmcdm3rM9BuwukdfYpwqM&returnurl=%2Fle-recit-boutique-hotel-de-dalat%2Fhotel%2Fdalat-vn.html%3FcountryId%3D38%26finalPriceView%3D1%26isShowMobileAppPrice%3Dfalse%26cid%3D-1%26numberOfBedrooms%3D%26familyMode%3Dfalse%26adults%3D4%26children%3D0%26rooms%3D2%26maxRooms%3D0%26checkIn%3D2025-12-5%26isCalendarCallout%3Dfalse%26childAges%3D%26numberOfGuest%3D0%26missingChildAges%3Dfalse%26travellerType%3D3%26showReviewSubmissionEntry%3Dfalse%26currencyCode%3DVND%26isFreeOccSearch%3Dfalse%26flightSearchCriteria%3D%255Bobject%2BObject%255D%26tspTypes%3D8%26los%3D3%26searchrequestid%3D008d6b8d-bbeb-4390-80c9-c70c0b2ef0c7%26ds%3DAO%252B1VeEi7mVsCuZP - [GroupMarkerNotSet(crbug.com/242999)!:A8001900B42A0000]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader (about:flags#enable-unsafe-swiftshader) flag to opt in to lower security guarantees for trusted content.",
+    "source": "rendering",
+    "timestamp": 1764692052370
+  },
+  {
+    "level": "WARNING",
+    "message": "https://www.agoda.com/account/signin.html?ottoken=eyJhbGciOiJBMjU2S1ciLCJlbmMiOiJBMjU2Q0JDLUhTNTEyIn0.L7ea9Et1t3fIsNaw9ORidCUYK47FI0g05A5LfGur9TcnBrwe0UFQCRP4XEDLDiQJjevZA6Ft-WDxPXYmyJ1duPhKuFT4Jd_F.6kuTBOepFhSEicShuG7bxw.DuhDk__tyaotUt_tDCxX5FSEmj_moX-NkgcNKasXSehmZThzbVlcFKI-rFU_fz_7.jInW90CZ4PWlxVJELdd0ErTmcdm3rM9BuwukdfYpwqM&returnurl=%2Fle-recit-boutique-hotel-de-dalat%2Fhotel%2Fdalat-vn.html%3FcountryId%3D38%26finalPriceView%3D1%26isShowMobileAppPrice%3Dfalse%26cid%3D-1%26numberOfBedrooms%3D%26familyMode%3Dfalse%26adults%3D4%26children%3D0%26rooms%3D2%26maxRooms%3D0%26checkIn%3D2025-12-5%26isCalendarCallout%3Dfalse%26childAges%3D%26numberOfGuest%3D0%26missingChildAges%3Dfalse%26travellerType%3D3%26showReviewSubmissionEntry%3Dfalse%26currencyCode%3DVND%26isFreeOccSearch%3Dfalse%26flightSearchCriteria%3D%255Bobject%2BObject%255D%26tspTypes%3D8%26los%3D3%26searchrequestid%3D008d6b8d-bbeb-4390-80c9-c70c0b2ef0c7%26ds%3DAO%252B1VeEi7mVsCuZP - [GroupMarkerNotSet(crbug.com/242999)!:A8301900B42A0000]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader (about:flags#enable-unsafe-swiftshader) flag to opt in to lower security guarantees for trusted content.",
+    "source": "rendering",
+    "timestamp": 1764692052370
+  },
+  {
+    "level": "WARNING",
+    "message": "https://www.agoda.com/activities/search?cityId=15932&cid=1908612 - The resource https://www.agoda.com/api/cronos/rtaheaderfooter/module was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+    "source": "javascript",
+    "timestamp": 1764692053688
+  },
+  {
+    "level": "WARNING",
+    "message": "https://www.agoda.com/account/signin.html?ottoken=eyJhbGciOiJBMjU2S1ciLCJlbmMiOiJBMjU2Q0JDLUhTNTEyIn0.L7ea9Et1t3fIsNaw9ORidCUYK47FI0g05A5LfGur9TcnBrwe0UFQCRP4XEDLDiQJjevZA6Ft-WDxPXYmyJ1duPhKuFT4Jd_F.6kuTBOepFhSEicShuG7bxw.DuhDk__tyaotUt_tDCxX5FSEmj_moX-NkgcNKasXSehmZThzbVlcFKI-rFU_fz_7.jInW90CZ4PWlxVJELdd0ErTmcdm3rM9BuwukdfYpwqM&returnurl=%2Fle-recit-boutique-hotel-de-dalat%2Fhotel%2Fdalat-vn.html%3FcountryId%3D38%26finalPriceView%3D1%26isShowMobileAppPrice%3Dfalse%26cid%3D-1%26numberOfBedrooms%3D%26familyMode%3Dfalse%26adults%3D4%26children%3D0%26rooms%3D2%26maxRooms%3D0%26checkIn%3D2025-12-5%26isCalendarCallout%3Dfalse%26childAges%3D%26numberOfGuest%3D0%26missingChildAges%3Dfalse%26travellerType%3D3%26showReviewSubmissionEntry%3Dfalse%26currencyCode%3DVND%26isFreeOccSearch%3Dfalse%26flightSearchCriteria%3D%255Bobject%2BObject%255D%26tspTypes%3D8%26los%3D3%26searchrequestid%3D008d6b8d-bbeb-4390-80c9-c70c0b2ef0c7%26ds%3DAO%252B1VeEi7mVsCuZP - [GroupMarkerNotSet(crbug.com/242999)!:A8601900B42A0000]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader (about:flags#enable-unsafe-swiftshader) flag to opt in to lower security guarantees for trusted content.",
+    "source": "rendering",
+    "timestamp": 1764692054130
+  },
+  {
+    "level": "SEVERE",
+    "message": "https://img.riskified.com/img/image-l.gif?t=17646920526920.7650927407141647&c=zs7mfmculw9pqeg93xe4imios2o4n&p=00wndc&a=null&o=flights.agoda.com&rt=1764692052774 - Failed to load resource: net::ERR_NAME_NOT_RESOLVED",
+    "source": "network",
+    "timestamp": 1764692055853
+  },
+  {
+    "level": "SEVERE",
+    "message": "https://img.riskified.com/img/image-l.gif?t=17646920526870.6110813349667595&c=zs7mfmculw9pqeg93xe4imios2o4n&p=00wndc&a=null&o=flights.agoda.com&rt=1764692052774 - Failed to load resource: net::ERR_NAME_NOT_RESOLVED",
+    "source": "network",
+    "timestamp": 1764692055853
+  }
+]

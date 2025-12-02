@@ -5,8 +5,8 @@
    "checkout_date": { "$date": { "base": "TODAY",  "offset": "P4D" } },
    "occupancies": {
      "occupancyRooms": 1,
-     "occupancyChildren": 0,
-     "occupancyAdults": 2
+     "occupancyAdults": 2,
+     "occupancyChildren": 0
    },
    "filters": [
      {"RoomOffers": "Breakfast included"}
@@ -18,8 +18,8 @@
     "checkout_date": { "$date": { "base": "NEXT_FRIDAY",  "offset": "P3D" } },
     "occupancies": {
       "occupancyRooms": 2,
-      "occupancyChildren": 0,
-      "occupancyAdults": 4
+      "occupancyAdults": 4,
+      "occupancyChildren": 0
     },
     "filters": [
       {"Facilities": "Swimming pool"}

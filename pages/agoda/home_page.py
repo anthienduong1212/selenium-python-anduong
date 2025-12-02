@@ -1,8 +1,10 @@
 import allure
+from typing import List, Tuple, Any
 
 from core.element.conditions import visible as cond_visible
 from core.element.custom_control import Calendar, CalendarConfig
 from core.element.locator import Locator
+from core.logging.logging import Logger
 from core.report.reporting import AllureReporter
 from core.utils.browser_utils import BrowserUtils
 from core.utils.string_utils import sign_and_abs
@@ -17,7 +19,7 @@ class HomePage(BasePage):
 
     # Search box and auto suggest
     TXT_AUTOCOMPLETE_INPUT = Locator.xpath('//div[@id="autocomplete-box"]//input', desc="HOME_PAGE Search box")
-    OPT_AUTOSUGGEST_ITEM = Locator.xpath('//li[@data-selenium="autosuggest-item" and @data-text={city}]',
+    OPT_AUTOSUGGEST_ITEM = Locator.xpath('//li[@data-testid="autosuggest-item" and @data-text={city}]',
                                          desc="HOME_PAGE Auto suggest")
 
     # Date Picker
@@ -34,13 +36,15 @@ class HomePage(BasePage):
                                                   "HOME_PAGE Current month")
 
     # Occupancy Selector and it controls
-    BTN_OCCUPANCY_SELECTOR = Locator.xpath("//div[@id='occupancy-selector']//div[@data-selenium={occupancyType}]")
+    BTN_OCCUPANCY = Locator.xpath("//div[@data-element-name='occupancy-box']", desc="HOME_PAGE Occupancy button")
+    BTN_OCCUPANCY_SELECTOR = Locator.xpath("//div[@id='occupancy-selector']//div[@data-selenium={occupancyType}]",
+                                           desc="HOME_PAGE Occupancy type ")
     BTN_QUANTITY_CONTROL = Locator.xpath(".//button[@data-selenium={control}]", desc="HOME_PAGE Increase/Decrease")
     BTN_QUANTITY_NUMBER = Locator.xpath(".//div[contains(@data-selenium,'desktop-occ')]", desc="HOME_PAGE Current "
                                                                                                "Quantity")
 
     # Search button
-    BTN_SEARCH = Locator.xpath("//div[@id='Tabs-Container']//button[@data-selenium='searchButton']"
+    BTN_SEARCH = Locator.xpath("//div[@id='Tabs-Container']//button[@data-element-name='search-button']"
                                , "HOME_PAGE Search Button")
 
     # Popup
@@ -49,8 +53,11 @@ class HomePage(BasePage):
     @allure.step("Close download AGODA app popup")
     def close_agoda_app_popup(self):
         """Close the popup"""
-        close_button = self.el(self.BTN_CLOSE_POPUP)
-        close_button.click()
+        try:
+            close_button = self.el(self.BTN_CLOSE_POPUP)
+            close_button.click()
+        except Exception:
+            Logger.debug("Popup doesn't display")
 
     @allure.step("Search with term: {text}")
     def search_with_term(self, text: str):
@@ -82,6 +89,16 @@ class HomePage(BasePage):
         calendar = Calendar(calendar_config, "AGODA CALENDAR")
         calendar.pick_range(checkin_date, checkout_date)
 
+    @allure.step("Wait for occupancy {occ_type} selector display")
+    def wait_for_occupancy_display(self, occ_type: OccupancyType) -> "Element":
+        return (self.el(self.BTN_OCCUPANCY_SELECTOR(occupancyType=occ_type))
+                .should_be(cond_visible()))
+
+    @allure.step("Click on Occupancy Button")
+    def click_on_occupancy_button(self):
+        btn = self.el(self.BTN_OCCUPANCY)
+        btn.click()
+
     @allure.step("Enter number of {occ_type}: {number}")
     def select_number_of_occupancy(self, occ_type: OccupancyType, number: int):
         """
@@ -89,23 +106,26 @@ class HomePage(BasePage):
         :param occ_type: Occupancy type such as Room, Adults, Children
         :param number: number of this occupancy
         """
-        # Find occupancy by type
-        occupancy_selector = self.el(self.BTN_OCCUPANCY_SELECTOR(occupancyType=occ_type)).should_be(cond_visible())
-        # Get current quantity display on current occupancy
+        occupancy_selector = self.wait_for_occupancy_display(occ_type)
+
         occupancy_quantity = occupancy_selector.find(self.BTN_QUANTITY_NUMBER)
 
-        # Define how many times should we click on +/- button
         current_quantity = int(occupancy_quantity.text())
         target_quantity = sign_and_abs(number - current_quantity)
 
-        # Define the control and number of click
         control, quantity = target_quantity
 
-        # Find the control
         occupancy_control = occupancy_selector.find(self.BTN_QUANTITY_CONTROL(control=control))
 
         for _ in range(quantity):
             occupancy_control.should_be(cond_visible()).click()
+
+    @allure.step("Select occupancies {occ_pairs}")
+    def select_occupancies(self, occ_pairs: List[Tuple[Any, int]]):
+        for enum_val, count in occ_pairs:
+            self.select_number_of_occupancy(enum_val, count)
+
+        self.click_on_occupancy_button()
 
     @allure.step("Submit search")
     def click_search(self):
@@ -117,9 +137,7 @@ class HomePage(BasePage):
             self.search_with_term(booking.destination)
             self.select_option_from_suggestion(booking.destination)
             self.select_booking_date(booking.checkin_date, booking.checkout_date)
-            for enum_val, count in booking.occ_pairs:
-                self.select_number_of_occupancy(enum_val, count)
-
+            self.select_occupancies(booking.occ_pairs)
             self.click_search()
 
 

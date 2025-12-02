@@ -3,6 +3,7 @@ import pytest
 
 from core.logging.logging import Logger
 from core.utils.json_utils import load_json_as
+from core.utils.slurp_mail_utils import SlurpMailUtil
 from tests.agoda.data.booking_data import BookingData
 from tests.agoda.data.resolve_booking_date import resolve_booking_date
 
@@ -34,8 +35,9 @@ def booking_data(request, all_booking_data) -> BookingData:
         raise ValueError(f"Booking data for test ID '{test_id}' not found in JSON file.")
 
 
-# @pytest.fixture()
-# def otp_mailbox():
-#     ms = SlurpMailUtil(api_key=os.getenv("MAILSLURP_API_KEY"))
-#     inbox_id, email_addr = ms.create_inbox(expires_in_minutes=30)
-#     yield {"ms": ms, "inbox_id": inbox_id, "email": email_addr}
+@pytest.fixture(scope="function")
+def otp_mailbox():
+    ms = SlurpMailUtil(api_key=os.getenv("MAILSLURP_API_KEY"))
+    inbox_id, email_addr = ms.create_inbox(expires_in_minutes=30)
+    yield {"ms": ms, "inbox_id": inbox_id, "email": email_addr}
+
