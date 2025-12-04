@@ -111,5 +111,11 @@ class BrowserUtils:
 
         return new_h
 
+    # ----------------------------
+    #      TAB_SWITCHING_ACTION
+    # ----------------------------
+
+
+
 
 

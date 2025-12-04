@@ -38,6 +38,6 @@ def booking_data(request, all_booking_data) -> BookingData:
 @pytest.fixture(scope="function")
 def otp_mailbox():
     ms = SlurpMailUtil(api_key=os.getenv("MAILSLURP_API_KEY"))
-    inbox_id, email_addr = ms.create_inbox(expires_in_minutes=30)
+    inbox_id, email_addr = ms.create_inbox()
     yield {"ms": ms, "inbox_id": inbox_id, "email": email_addr}
 

@@ -14,12 +14,14 @@ from selenium.common.exceptions import (ElementClickInterceptedException,
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webdriver import WebDriver, WebElement
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 from core.configuration.configuration import Configuration
 from core.constants.constants import Constants
 from core.constants.JS_scripts import JSScript
 from core.driver.driver_manager import DriverManager
-from core.element.conditions import Condition, click_ready, in_viewport
+from core.element.conditions import Condition, click_ready, in_viewport, frame_display
 from core.element.conditions import visible as cond_visible
 from core.element.locator import Locator
 from core.logging.logging import Logger
@@ -126,9 +128,9 @@ class Element:
         """
         viewport_cond = in_viewport()
         try:
-            return viewport_cond.predicate(self.resolve())
+            return viewport_cond.predicate(self._driver())
         except StaleElementReferenceException:
-            return viewport_cond.predicate(self._find_now())
+            return viewport_cond.predicate(self._driver())
         except Exception as e:
             Logger.error(f"Error checking viewport status for {self.name}: {e}")
             return False
@@ -232,6 +234,18 @@ class Element:
             ActionChains(self._driver()).move_to_element(self.resolve()).perform()
             return self
 
+    def switch_to_frame(self) -> "Element":
+        with (AllureReporter.step(f"Switch to iframe {self.name}")):
+            try:
+                self.should_be(frame_display())
+                return self
+            except TimeoutException:
+                Logger.error(f"Timeout while waiting for iframe {self.name} to be available.")
+                raise
+            except Exception as e:
+                Logger.error(f"An error occurred while switching to frame: {e}")
+            raise
+
     # ================================
     #          STATE GETTERS
     # ================================
@@ -319,31 +333,25 @@ class Element:
 
     def should_be(self, *conditions: Condition, timeout_ms: Optional[int] = None) -> "Element":
         """Wait until a specific condition is met for the element."""
-        timeout_s = (timeout_ms / 1000.0) if timeout_ms else self.waiter.timeout_s
+        driver = self._driver()
+        locator_tuple = (self.locator.by, self.locator.value)
+        desc = f'Element("{self.name}") should meet: ' + ", ".join(c.name for c in conditions)
+
+        timeout_s = (timeout_ms / 1000.0) if timeout_ms else (self.config.wait_timeout_ms / 1000.0)
+        poll_interval_s = (self.config.polling_interval_ms / 1000.0)
 
         assert timeout_s > 0, "Timeout for 'should' condition must be greater than zero."
 
-        if not conditions:
-            Logger.debug(f"Calling should_be() with no conditions for element: {self.name}")
-            return self
+        finalized_conditions = []
+        for cond in conditions:
+            finalized_conditions.append(cond.finalize(locator_tuple))
 
-        temp_wait = self.waiter
-        if timeout_ms is not None:
-            temp_wait = Waiter(timeout_s=timeout_s,
-                               poll_s=self.waiter.poll_s)
-
-        desc = f'Element("{self.name}") should meet: ' + ", ".join(c.name for c in conditions)
-
-        def _condition_checker() -> bool:
+        def _all_condition_meet(drv) -> bool:
             """Closure that runs all conditions, handling stale elements."""
-            try:
-                el = self.resolve()
-                return all(c.predicate(el) for c in conditions)
-            except (NoSuchElementException, StaleElementReferenceException):
-                return False
+            return all(cond(drv) for cond in finalized_conditions)
 
         def _on_timeout() -> str:
-            Logger.error(f"Condition [{self.name}] of was not met within the timeout period.")
+            Logger.debug(f"Condition [{self.name}] of was met within the timeout period.")
             snapshot = "<not present>"
             try:
                 el = self._find_now()
@@ -355,7 +363,8 @@ class Element:
                     f"Locator={self.locator.value}")
 
         try:
-            temp_wait.until(_condition_checker, _on_timeout)
+            wait_context = WebDriverWait(driver, timeout=timeout_s, poll_frequency=poll_interval_s)
+            wait_context.until(_all_condition_meet, message=_on_timeout())
             Logger.debug(f"Condition met for {self.name}")
             return self
 

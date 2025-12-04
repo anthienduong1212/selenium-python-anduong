@@ -2,28 +2,43 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
-from selenium.common.exceptions import StaleElementReferenceException
+from selenium.webdriver.common.by import By
+from selenium.common.exceptions import StaleElementReferenceException, NoSuchElementException
+from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
+from selenium.webdriver.support import expected_conditions as EC
 
 from core.constants.JS_scripts import JSScript
+from core.element.locator import Locator
 from core.logging.logging import Logger
 
-Predicate = Callable[[WebElement], bool]
+ECPredicate = Callable[[WebDriver], Union[bool, WebElement, object]]
 
 
 @dataclass(frozen=True)
 class Condition:
     name: str
-    predicate: Predicate
-    explain: Optional[Callable[[WebElement], str]] = None
+    predicate: Optional[ECPredicate] = None
+    ec_builder: Optional[Callable[[tuple[str, str]], ECPredicate]] = None
 
-    def test(self, el: WebElement) -> bool:
-        try:
-            return self.predicate(el)
-        except StaleElementReferenceException:
-            return False
+    def finalize(self, locator: tuple[str, str]):
+        if self.ec_builder and not self.predicate:
+            finalize_pred = self.ec_builder(locator)
+
+            return Condition(
+                name=self.name,
+                predicate=finalize_pred,
+                ec_builder=None
+            )
+        return self
+
+    def __call__(self, driver: WebDriver) -> bool:
+        if self.predicate:
+            result = self.predicate(driver)
+            return result is not None and result is not False
+        raise RuntimeError("Condition was not finalized with a locator before use.")
 
 
 def appear() -> Condition:
@@ -35,73 +50,66 @@ def disappear() -> Condition:
 
 
 def visible() -> Condition:
-    return Condition("visible", lambda e: e.is_displayed())
+    return Condition("visible",
+                     ec_builder=lambda loc: EC.visibility_of_element_located(loc))
 
 
 def hidden() -> Condition:
-    return Condition("hidden", lambda e: not e.is_displayed())
+    return Condition("hidden",
+                     ec_builder=lambda loc: EC.invisibility_of_element_located(loc))
 
 
 def present() -> Condition:
-    return Condition("present", lambda e: e is not None)
-
-
-def enabled() -> Condition:
-    return Condition("enabled", lambda e: e.is_enabled())
-
-
-def disabled() -> Condition:
-    return Condition("disabled", lambda e: not e.is_enabled())
+    return Condition("present",
+                     ec_builder=lambda loc: EC.presence_of_element_located(loc))
 
 
 def clickable() -> Condition:
-    def _pred(e: WebElement) -> bool:
-        return e.is_displayed() and e.is_enabled()
-
-    return Condition("clickable", _pred)
+    return Condition("clickable",
+                     ec_builder=lambda loc: EC.element_to_be_clickable(loc))
 
 
 def has_text(substr: str) -> Condition:
-    return Condition(f'has_text("{substr}")', lambda e: substr in (e.text or ""))
-
-
-def exact_text(text: str) -> Condition:
-    return Condition(f'exact_text("{text}")', lambda e: (e.text or "") == text)
+    return Condition(f'has_text("{substr}")',
+                     ec_builder=lambda loc: EC.text_to_be_present_in_element(loc, substr))
 
 
 def value_is(text: str) -> Condition:
-    return Condition(f'value_is("{text}")', lambda e: (e.get_attribute("value") or "") == text)
-
-
-def attr(name: str, value: str | None = None) -> Condition:
-    if value is None:
-        return Condition(f'attr("{name}") exists', lambda e: e.get_attribute(name) is not None)
-    return Condition(f'attr("{name}") == "{value}"', lambda e: (e.get_attribute(name) or "") == value)
-
-
-def css_class(name: str) -> Condition:
-    return Condition(f'css_class("{name}")', lambda e: name in (e.get_attribute("class") or "").split())
+    return Condition(f'value_is("{text}")',
+                     ec_builder=lambda loc: EC.text_to_be_present_in_element_value(loc, text))
 
 
 def selected() -> Condition:
-    return Condition("selected", lambda e: e.is_selected())
+    return Condition("selected",
+                     ec_builder=lambda loc: EC.element_to_be_selected(loc))
 
 
-def text_matches(pattern: str | re.Pattern) -> Condition:
-    rx = re.compile(pattern) if isinstance(pattern, str) else pattern
-    return Condition(f"text_matches({rx.pattern})", lambda e: bool(rx.search(e.text or "")))
+def frame_display() -> Condition:
+    return Condition("frame display",
+                     ec_builder=lambda loc: EC.frame_to_be_available_and_switch_to_it(loc))
 
 
-def css_value(prop: str, value: str) -> Condition:
-    return Condition(f'css_value("{prop}") == "{value}"', lambda e: (e.value_of_css_property(prop) or "") == value)
+def _js_predicate_builder(element_predicate: Callable[[WebElement], bool]) \
+        -> Callable[[tuple[str, str]], ECPredicate]:
+    def builder(locator_tuple: tuple[str, str]) -> ECPredicate:
+        def resolve_predicate(driver: WebDriver) -> bool:
+            try:
+                el = EC.visibility_of_element_located(locator_tuple)(driver)
 
+                if el is None or el is False:
+                    return False
 
-def attribute_contains(name: str, substring: str) -> Condition:
-    return Condition(f'attr("{name}") contains "{substring}"', lambda e: substring in (e.get_attribute(name) or ""))
+                return element_predicate(el)
 
+            except (NoSuchElementException, StaleElementReferenceException):
+                return False
+            except Exception as e:
+                Logger.debug(f"Error in _js_predicate_builder() for locator {locator_tuple}: {e}")
+                return False
 
-def not_(cond: Condition) -> Condition:
-    return Condition(f"not({cond.name})", lambda e: not cond.predicate(e))
+        return resolve_predicate
+
+    return builder
 
 
 def in_viewport() -> Condition:
@@ -119,7 +127,7 @@ def in_viewport() -> Condition:
             Logger.debug("Element is not located in view port")
             return False
 
-    return Condition("in_viewport", _pred)
+    return Condition("in_viewport", ec_builder=_js_predicate_builder(_pred))
 
 
 def not_covered() -> Condition:
@@ -139,31 +147,20 @@ def not_covered() -> Condition:
             Logger.debug("Element no longer attached to DOM")
             return False
 
-    return Condition("not_covered", _pred)
+    return Condition("not_covered", ec_builder=_js_predicate_builder(_pred))
 
 
 def click_ready() -> Condition:
-    # “clickable++”: visible + enabled + in_viewport + not_covered
-    def _pred(e: WebElement) -> bool:
-        try:
-            if not e.is_displayed() or not e.is_enabled():
-                return False
-        except Exception:
-            return False
-        return in_viewport().predicate(e) and not_covered().predicate(e)
-
-    return Condition("click_ready", _pred)
+    return Condition(
+        name="click_ready",
+        ec_builder=lambda loc_tuple: EC.element_to_be_clickable(loc_tuple)
+    )
 
 
 # Alias “should_be / should_have” style
 be_visible = visible
 be_hidden = hidden
-be_enabled = enabled
-be_disabled = disabled
 be_clickable = clickable
 have_text = has_text
-have_exact_text = exact_text
 have_value = value_is
-have_attr = attr
-have_css_class = css_class
 be_selected = selected

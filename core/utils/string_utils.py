@@ -31,3 +31,10 @@ def contains_text(text: str, ex: str) -> bool:
 
 def sign_and_abs(x: int) -> tuple[str, int]:
     return ("minus", -x) if x < 0 else (("plus", x) if x > 0 else ("zero", 0))
+
+
+def extract_email_address(text: str) -> str:
+    email_regex = r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
+
+    email = re.search(email_regex, text).group(0)
+    return email if email else None

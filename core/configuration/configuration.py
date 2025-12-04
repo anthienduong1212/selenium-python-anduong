@@ -61,7 +61,7 @@ class Configuration:
     auto_scroll: bool = env_bool("AUTO_SCROLL", True)
     scroll_block: str = os.getenv("SCROLL_BLOCK", "center")
     header_offset_px: int = env_int("HEADER_OFFSET_PX", 0) or 0
-    scroll_backend: str = os.getenv("SCROLL_BACKEND", "js")  # js | wheel | move
+    scroll_backend: str = os.getenv("SCROLL_BACKEND", "wheel")  # js | wheel | move
 
     per_browser_remote_url: Optional[Dict[str, str]] = field(default_factory=dict)
     _json_data: Dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
