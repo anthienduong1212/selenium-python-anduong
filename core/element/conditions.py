@@ -89,6 +89,47 @@ def frame_display() -> Condition:
                      ec_builder=lambda loc: EC.frame_to_be_available_and_switch_to_it(loc))
 
 
+def not_empty() -> Condition:
+    """Checks if at least one element is present and visible (standard EC)."""
+    return Condition("is not empty (present in DOM)",
+                     ec_builder=lambda loc: EC.presence_of_all_elements_located(loc))
+
+
+def is_empty() -> Condition:
+    """Checks if zero elements are present."""
+    return has_size(0)
+
+
+def has_size(expected_size: int) -> Condition:
+    """Checks if the number of elements found matches the expected size."""
+
+    def _size_match_condition(locator_tuple):
+        def _check(driver) -> bool:
+            elements = EC.visibility_of_all_elements_located(locator_tuple)(driver)
+            return len(elements) == expected_size
+
+        return _check
+
+    return Condition(
+        name=f"has size of {expected_size}",
+        ec_builder=lambda loc: _size_match_condition(loc)
+    )
+
+
+def texts_to_be_present_in_elements(texts: list) -> Condition:
+    """
+       Checks if all specified texts are present in the collection of elements.
+    """
+    def _texts_present_condition(locator_tuple):
+        def _check(driver) -> bool:
+            elements = EC.visibility_of_all_elements_located(locator_tuple)(driver)
+            actual_texts = [el.text for el in elements]
+            return all(text in actual_texts for text in texts)
+        return _check
+    return Condition(f"all texts {texts} are present",
+                     ec_builder=lambda loc: _texts_present_condition(loc))
+
+
 def _js_predicate_builder(element_predicate: Callable[[WebElement], bool]) \
         -> Callable[[tuple[str, str]], ECPredicate]:
     def builder(locator_tuple: tuple[str, str]) -> ECPredicate:

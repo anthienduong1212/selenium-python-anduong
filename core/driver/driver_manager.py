@@ -12,6 +12,8 @@ from selenium.common.exceptions import (InvalidArgumentException,
                                         NoSuchWindowException,
                                         TimeoutException, WebDriverException)
 from selenium.webdriver.remote.webdriver import WebDriver
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.common.action_chains import ActionChains
 
 from core.configuration.configuration import Configuration
 from core.constants.constants import Constants
@@ -83,6 +85,18 @@ class DriverManager:
         with cls._LOCK:
             rec = cls._REGISTRY.get(key)
             return rec.config if rec else None
+
+    @classmethod
+    def get_webdriver_wait(cls) -> WebDriverWait:
+        driver = cls.get_current_driver()
+        timeout_s = cls.get_current_config().wait_timeout_ms / 1000.0
+        poll_s = cls.get_current_config().polling_interval_ms / 1000.0
+        return WebDriverWait(driver=driver, timeout=timeout_s, poll_frequency=poll_s)
+
+    @classmethod
+    def get_action(cls) -> ActionChains:
+        driver = cls.get_current_driver()
+        return ActionChains(driver=driver)
 
     @classmethod
     def quit_driver(cls) -> None:

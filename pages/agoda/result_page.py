@@ -6,8 +6,9 @@ from typing import Tuple, List, Dict
 from selenium.webdriver.common.by import By
 
 from core.element.conditions import Condition
-from core.element.conditions import visible as cond_visible
+from core.element.conditions import visible as cond_visible, has_size as size
 from core.element.locator import Locator
+from core.report.reporting import AllureReporter
 from core.utils.browser_utils import BrowserUtils
 from core.utils.datetime_utils import parse_strict
 from core.logging.logging import Logger
@@ -33,8 +34,8 @@ class ResultPage(BasePage):
     OPT_FILTER_OPTION = Locator.xpath("//div[.//span[normalize-space(.)={option_name}]]/preceding-sibling::div//input"
                                       , "RESULT_PAGE Filter option")
 
-    @allure.step("Get information of first {n} hotels in {city}")
-    def get_search_hotel_results(self, n: int, city: str) -> list[Dict[str, Any]]:
+    @allure.step("Get information of first {n} hotels")
+    def get_search_hotel_results(self, n: int) -> list[Dict[str, Any]]:
         """
         Verify: Top n LI_HOTEL_INFORMATION elements have:
         - name exists & not empty
@@ -55,16 +56,12 @@ class ResultPage(BasePage):
             name = (name_el.text() or "").strip()
             addr = (addr_el.text() or "").strip()
 
-            hotel_data_list.append({"name": name, "address": addr})
-
-            if not name:
-                empty_names.append(i)
-            if not contains_text(addr, city):
-                mismatches.append((i, addr))
+            with AllureReporter.step(f"Adding hotel {name} has address {addr} to list"):
+                hotel_data_list.append({"name": name, "address": addr})
 
         return list(hotel_data_list)
 
-    @allure.step("Checking hotel which is missing data")
+    @allure.step("Checking address of {n} hotels in {city}")
     def checking_hotel_address_from_search(self, n: int, city: str) -> List[Tuple[int, str]]:
         """
         Get the list of data and extract which data fields is missing
@@ -72,13 +69,15 @@ class ResultPage(BasePage):
         :param city: matching term
         :return: List of hotel which is missing their information
         """
-        hotel_data = self.get_search_hotel_results(n, city)
+        hotel_data = self.get_search_hotel_results(n)
 
         mismatched_cities: List[Tuple[int, str]] = []
 
         for i, data in enumerate(hotel_data):
             if not contains_text(data.get("address"), city):
-                mismatched_cities.append(i)
+                name = data.get("name")
+                with AllureReporter.step(f"Found hotel has missing address : {name}"):
+                    mismatched_cities.append((i, name))
 
         return mismatched_cities
 
@@ -104,6 +103,7 @@ class ResultPage(BasePage):
     @allure.step("Select the first hotel on result")
     def select_first_hotel(self):
         """Select first hotel in search result"""
-        hotel = self.els(self.LI_HOTEL_INFORMATION).get(0)
+        hotels = self.els(self.LI_HOTEL_INFORMATION)
+        hotel = hotels.get(0).should_be(cond_visible())
         BrowserUtils.force_same_tab_link()
         hotel.click()

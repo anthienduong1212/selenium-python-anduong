@@ -14,14 +14,14 @@ class BaseAssertion(AssertionInterface, ABC):
     @classmethod
     @contextmanager
     def assertion_step(cls, description: str):
-        try:
-            with AllureReporter.step(description):
-                yield
-        finally:
+        with AllureReporter.step(description):
             try:
-                AllureReporter.attach_page_screenshot(name=f"Screenshot for assertion: {description}")
-            except Exception as e:
-                Logger.warning(f"Could not attach screenshot for assertion step: {e}")
+                yield
+            finally:
+                try:
+                    AllureReporter.attach_page_screenshot(name=f"Screenshot for assertion: {description}")
+                except Exception as e:
+                    Logger.warning(f"Could not attach screenshot for assertion step: {e}")
 
     def assert_raises(self, fn: Callable, exc: type[BaseException]) -> BaseException:
         """Expect the function to throw an exception; return the exception to continue asserting the property."""

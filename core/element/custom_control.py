@@ -8,8 +8,7 @@ from functools import partial
 import allure
 from typing import Callable, Optional, Sequence
 
-from core.element.conditions import clickable as cond_clickable
-from core.element.conditions import visible as cond_visible
+from core.element.conditions import clickable as cond_clickable, visible as cond_visible, has_size as size
 from core.element.element import Element
 from core.element.locator import Locator
 from core.logging.logging import Logger
@@ -58,7 +57,7 @@ class Calendar:
 
     def _visible_month_caption(self) -> list[str]:
         root = self._root_ctx()
-        containers = root.all(self.cfg.month_containers).should_have_size(2)
+        containers = root.all(self.cfg.month_containers).should_have(size(2))
 
         captions = []
         if containers is None:

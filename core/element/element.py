@@ -39,7 +39,6 @@ class Element:
 
     def __init__(self,
                  selector: Locator,
-                 config: Optional[Configuration] = None,
                  context: Optional["Element"] = None):
 
         if not isinstance(selector, Locator):
@@ -47,15 +46,10 @@ class Element:
                             f", not {type(selector).__name__}. Ensure Locator is used for initialization.")
 
         self.locator: Locator = selector
-        self.config: Configuration = config or DriverManager.get_current_config()
+        self.config: Configuration = DriverManager.get_current_config()
         self.context: Optional["Element"] = context
         self.name = str(self.locator.desc if self.locator.desc else self.locator)
         self._last_ref: Optional[WebElement] = None
-
-        self.waiter = Waiter(
-            timeout_s=self.config.wait_timeout_ms / 1000.0,
-            poll_s=self.config.polling_interval_ms / 1000.0,
-        )
 
     # ================================
     #          DRIVER/LOCATING
@@ -71,6 +65,7 @@ class Element:
         - If locator has parent -> resolve parent and find in CONTEXT parent
         - If not -> find from driver
         """
+
         if locator.parent:
             parent_we = self._find_web_element_in_context(locator.parent)
             return parent_we.find_element(locator.by, locator.value)
@@ -86,7 +81,7 @@ class Element:
 
         return self._find_web_element_in_context(current_loc)
 
-    def resolve(self):
+    def resolve(self) -> WebElement:
         """
         Resolve the WebElement reference, re-finding if stale.
         This is the core lazy-loading mechanism.
@@ -111,11 +106,11 @@ class Element:
 
     def find(self, selector: Locator) -> "Element":
         """Find a single child element within this element's context."""
-        return Element(selector, config=self.config, context=self)
+        return Element(selector, context=self)
 
     def all(self, selector: Locator) -> "Elements":
         """Find all child elements within this element's context."""
-        return Elements(selector, config=self.config, context=self)
+        return Elements(selector, context=self)
 
     # ================================
     #          SCROLLING
@@ -126,7 +121,7 @@ class Element:
         Check if the element is currently visible within the browser viewport
         using the shared condition from conditions.py.
         """
-        viewport_cond = in_viewport()
+        viewport_cond = in_viewport().finalize((self.locator.by, self.locator.value))
         try:
             return viewport_cond.predicate(self._driver())
         except StaleElementReferenceException:
@@ -140,16 +135,17 @@ class Element:
         if self.is_in_viewport():
             return
 
-        el = self.resolve()
+        el = self.should_be(cond_visible()).resolve()
         backend = backend if backend else getattr(self.config, "scroll_backend", "js")
         block = getattr(self.config, "scroll_block", "center")
         header_offset = getattr(self.config, "header_offset_px", 0)
+        actions = DriverManager.get_action()
 
         try:
             if backend == "wheel":
-                ActionChains(self._driver()).scroll_to_element(el).perform()
+                actions.scroll_to_element(el).perform()
             elif backend == "move":
-                ActionChains(self._driver()).move_to_element(el).perform()
+                actions.move_to_element(el).perform()
             else:
                 self._driver().execute_script(
                     JSScript.SCROLLING_SCRIPT,
@@ -157,6 +153,7 @@ class Element:
                 )
             if header_offset:
                 self._driver().execute_script("window.scrollBy(0, -arguments[0]);", header_offset)
+            Logger.debug(f"Scroll to element {self.name}")
 
         except Exception as e:
             Logger.warning(f"Scroll backend failed: {e}. Trying simple move_to_element.")
@@ -183,7 +180,7 @@ class Element:
     #          ACTIONS
     # ================================
 
-    def click(self) -> "Element":
+    def click(self):
         """Click on the element."""
         with AllureReporter.step(f"Click on element {self.name}"):
             self.should_be(cond_visible())
@@ -197,9 +194,8 @@ class Element:
                 self.should_be(click_ready(), timeout_ms=timeout_ms)
 
                 self.resolve().click()
-            return self
 
-    def type(self, text: str, clear: bool = True) -> "Element":
+    def type(self, text: str, clear: bool = True):
         """Type text into an input element."""
         with AllureReporter.step(f"Type {text} in to {self.name}"):
             self.should_be(cond_visible())
@@ -212,27 +208,46 @@ class Element:
                     el.send_keys(Keys.CONTROL, "a")
                     el.send_keys(Keys.DELETE)
             el.send_keys(text)
-            return self
 
-    def press(self, *keys) -> "Element":
+    def press(self, *keys):
         """Send specific key presses to the element (e.g., Keys. ENTER)."""
         with AllureReporter.step(f"Send {keys} on {self.name}"):
             self.resolve().send_keys(*keys)
-            return self
 
-    def clear(self) -> "Element":
+    def clear(self):
         """Clear the text of an input element."""
         with AllureReporter.step(f"Clear text on {self.name}"):
             self.resolve().clear()
-            return self
 
-    def hover(self) -> "Element":
+    def hover(self):
         """Clear the text of an input element."""
         with AllureReporter.step(f"Hover mouse to {self.name}"):
             self.should_be(cond_visible())
             self.scroll_into_view()
-            ActionChains(self._driver()).move_to_element(self.resolve()).perform()
-            return self
+            actions = DriverManager.get_action()
+            actions.move_to_element(self.resolve()).perform()
+
+    def drag_and_drop_to(self, target: "Element"):
+        """Performs a drag and drop operation from this element to a target element."""
+        with AllureReporter.step(f"Performed drag and drop from {self.name} to {target.name}"):
+            self.should_be(cond_visible())
+            target = target.should_be(cond_visible()).resolve()
+            actions = DriverManager.get_action()
+            actions.drag_and_drop(self.resolve(), target).perform()
+
+    def click_with_action(self):
+        """Performs a click using ActionChains (useful for complex scenarios)."""
+        with AllureReporter.step(f"Performed click action on element: {self.name}"):
+            self.should_be(cond_visible())
+            actions = DriverManager.get_action()
+            actions.click(self.resolve()).perform()
+
+    def double_click_with_action(self):
+        """Performs a double click using ActionChains (useful for complex scenarios)."""
+        with AllureReporter.step(f"Performed double click action on element: {self.name}"):
+            self.should_be(cond_visible())
+            actions = DriverManager.get_action()
+            actions.double_click(self.resolve()).perform()
 
     def switch_to_frame(self) -> "Element":
         with (AllureReporter.step(f"Switch to iframe {self.name}")):
@@ -260,13 +275,17 @@ class Element:
         el = self.resolve()
         try:
             if mode == "visible":
-                return (el.text or el.get_attribute("innerText") or "").strip()
+                text = (el.text or el.get_attribute("innerText") or "").strip()
             elif mode == "all":
-                return (el.get_attribute("textContent") or "").strip()
+                text = (el.get_attribute("textContent") or "").strip()
             elif mode == "value":
-                return (el.get_property("value") or el.get_attribute("value") or "").strip()
+                text = (el.get_property("value") or el.get_attribute("value") or "").strip()
             else:
-                return (el.text or el.get_attribute("innerText") or "").strip()
+                text = (el.text or el.get_attribute("innerText") or "").strip()
+
+            Logger.debug(f"Get text '{text}' from {self.name}")
+            return text
+
         except StaleElementReferenceException:
             Logger.warning("StaleElementReferenceException in text() getter.")
             return self.text(mode=mode)
@@ -338,7 +357,6 @@ class Element:
         desc = f'Element("{self.name}") should meet: ' + ", ".join(c.name for c in conditions)
 
         timeout_s = (timeout_ms / 1000.0) if timeout_ms else (self.config.wait_timeout_ms / 1000.0)
-        poll_interval_s = (self.config.polling_interval_ms / 1000.0)
 
         assert timeout_s > 0, "Timeout for 'should' condition must be greater than zero."
 
@@ -363,7 +381,7 @@ class Element:
                     f"Locator={self.locator.value}")
 
         try:
-            wait_context = WebDriverWait(driver, timeout=timeout_s, poll_frequency=poll_interval_s)
+            wait_context = DriverManager.get_webdriver_wait()
             wait_context.until(_all_condition_meet, message=_on_timeout())
             Logger.debug(f"Condition met for {self.name}")
             return self
@@ -388,24 +406,27 @@ class Elements:
     """
 
     def __init__(self, selector: Locator,
-                 config: Optional[Configuration] = None,
                  context: Element | None = None):
 
         if not isinstance(selector, Locator):
             raise TypeError(f"Selector must be a Locator object, not {type(selector).__name__}.")
 
-        self.locator = selector
-        self.config: Configuration = config or DriverManager.get_current_config()
-        self.context = context
-        self.name = str(self.locator)
-
-        self.waiter = Waiter(
-            timeout_s=self.config.wait_timeout_ms / 1000.0,
-            poll_s=self.config.polling_interval_ms / 1000.0,
-        )
+        self.locator: Locator = selector
+        self.config: Configuration = DriverManager.get_current_config()
+        self.context: Element = context
+        self.name: str = str(self.locator.desc) or self.locator.value
 
     def _driver(self) -> WebDriver:
         return DriverManager.get_driver(self.config)
+
+    def _find_now(self) -> List[WebElement]:
+        """Find the element on the page immediately."""
+        current_loc = self.locator
+
+        if self.context and not current_loc.parent:
+            current_loc = replace(current_loc, parent=self.context.locator)
+
+        return self._driver().find_elements(current_loc.by, current_loc.value)
 
     def resolve(self) -> List[WebElement]:
         """Find the list of WebElements immediately."""
@@ -417,21 +438,12 @@ class Elements:
         except (NoSuchElementException, StaleElementReferenceException):
             return []
 
-    def first(self) -> Element:
+    def first(self) -> IndexedElement:
         return self.get(0)
 
-    def get(self, index: int) -> Element:
+    def get(self, index: int) -> IndexedElement:
         """Get a specific element from the collection by index (lazily)."""
-        if self.locator.by.lower() == "xpath":
-            new_xpath_value = f"({self.locator.value})[{index + 1}]"
-            new_locator = Locator(by="xpath", value=new_xpath_value,
-                                  parent=self.locator.parent,
-                                  desc="Element of {self.locator.desc} at index {int}")
-            return Element(new_locator,
-                           config=self.config,
-                           context=self.context,
-                           )
-        return IndexedElement(self, index)
+        return IndexedElement(self.locator, index, context=self.context)
 
     def size(self) -> int:
         """Get the current size of the collection."""
@@ -448,25 +460,34 @@ class Elements:
                 continue
         return values
 
-    def should_have_size(self, n: int, timeout_ms: Optional[int] = None) -> "Elements":
-        """Wait until the collection has exactly the expected size."""
-        timeout_s = timeout_ms / 1000.0 if timeout_ms is not None else self.waiter.timeout_s
+    def should_have(self, *conditions: Condition, timeout_ms: Optional[int] = None) -> "Elements":
+        """Wait until a specific condition is met for the collection of elements."""
+        locator_tuple = (self.locator.by, self.locator.value)
+        desc = f'Collection of Elements("{self.name}") should meet: ' + ", ".join(c.name for c in conditions)
 
-        temp_waiter = self.waiter
-        if timeout_ms is not None:
-            temp_waiter = Waiter(timeout_s=timeout_s, poll_s=self.waiter.poll_s)
+        timeout_s = (timeout_ms / 1000.0) if timeout_ms else (self.config.wait_timeout_ms / 1000.0)
 
-        def _supplier() -> bool:
-            return len(self.resolve()) == n
+        assert timeout_s > 0, "Timeout for 'should' condition must be greater than zero."
+
+        finalized_conditions = [cond.finalize(locator_tuple) for cond in conditions]
+
+        def _all_condition_meet(drv) -> bool:
+            """Closure that runs all collection conditions."""
+            return all(cond(drv) for cond in finalized_conditions)
 
         def _on_timeout() -> str:
-            actual = len(self.resolve())
-            return f'Elements("{self.name}") expected size={n}, actual={actual}. Locator={self.locator}'
+            count = len(self._find_now())
+            return (f"{desc}.\n"
+                    f"Last state: Count={count} elements found.\n"
+                    f"Locator={self.locator.value}")
 
         try:
-            temp_waiter.until(_supplier, _on_timeout)
+            wait_context = DriverManager.get_webdriver_wait()
+            wait_context.until(_all_condition_meet, message=_on_timeout())
+            Logger.debug(f"Condition met for collection {self.name}")
             return self
-        except TimeoutException as e:
+
+        except BaseException as e:
             spath = getattr(e, "screenshot_path", None)
             if spath:
                 AllureReporter.attach_file(spath, f"FAILED - {self.name}", "image/png")
@@ -479,14 +500,35 @@ class IndexedElement(Element):
     Proxy an element in the collection by index (re-find each time to avoid staleness).
     """
 
-    def __init__(self, collection: Elements, index: int):
-        super().__init__(collection.locator, config=collection.config, context=collection.context)
-        self._collection = collection
-        self._index = index
+    def __init__(self, locator: Locator, index: int, context):
+        super().__init__(locator, context)
+        self.index = index
 
-    def _find_now(self) -> WebElement:
-        els = self._collection.resolve()
-        if self._index < 0 or self._index >= len(els):
-            raise NoSuchElementException(
-                f"Index {self._index} is out of range (size={len(els)}) for {self._collection.name}")
-        return els[self._index]
+    def resolve(self) -> WebElement:
+        locator_tuple = (self.locator.by, self.locator.value)
+        Logger.info(f"[Resolve/Index] Start resolving for index {self.index}, locator: {locator_tuple[1]}")
+        waiter = DriverManager.get_webdriver_wait()
+
+        def get_matching_elements(drv) -> list[WebElement] | bool:
+            elements = drv.find_elements(*locator_tuple)
+            current_count = len(elements)
+            Logger.info(f"[Resolve/Index] Found {current_count} elements (need > {self.index}) in this wait cycle.")
+
+            if current_count > self.index:
+                return elements
+            else:
+                return False
+        try:
+            Logger.info(f"[Resolve/Index] Waiting for list to have enough elements...")
+            results = waiter.until(get_matching_elements)
+            Logger.info(f"[Resolve/Index] Wait successful. Returning element at index {self.index}.")
+            return results[self.index]
+
+        except TimeoutException:
+            Logger.error(f"[Resolve/Index] Timeout waiting for element at index {self.index}. Locator: {locator_tuple[1]}")
+            raise NoSuchElementException(f"Element at index {self.index} not found or list too short within timeout.")
+
+        except StaleElementReferenceException:
+            Logger.warning(f"[Resolve/Index] Stale element reference during initial find. Retrying resolve().")
+            return self.resolve()
+

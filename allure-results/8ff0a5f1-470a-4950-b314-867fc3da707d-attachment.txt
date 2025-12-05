@@ -1,1 +1,0 @@
-Locator(by='xpath', value="//input[@data-cy='otp-box-0']", desc="LOGIN_PAGE 6 digits OTP fill box {'index': 'otp-box-0'}", parent=None)

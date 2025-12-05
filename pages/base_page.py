@@ -15,16 +15,15 @@ class BasePage:
     """
 
     def __init__(self):
-        self.config = DriverManager.get_current_config()
-        self.driver = DriverManager.get_driver(self.config)
+        self.driver = DriverManager.get_current_driver()
         if self.driver is None:
             Logger.error("Driver is not initialized or available in context.")
 
     def el(self, selector):
-        return Element(selector, config=self.config)
+        return Element(selector)
 
     def els(self, selector):
-        return Elements(selector, config=self.config)
+        return Elements(selector)
 
     @allure.step("Navigate to {url}")
     def open(self, url: str):
