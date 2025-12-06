@@ -28,14 +28,6 @@ class EdgeProvider(BrowserProvider):
         Logger.info("Applying vendor-specific Edge JSON overrides (ms:edgeOptions)...")
         mso = block.get("ms:edgeOptions")
         if isinstance(mso, dict):
-            for a in mso.get("args", []) or []:
-                self._add_args(options, str(a))
-                Logger.debug(f"Adding Edge argument: {a}")
-
-            prefs = mso.get("prefs")
-            if isinstance(prefs, dict):
-                self._set_chromium_prefs(options, prefs)
-                Logger.debug("Setting Edge preferences.")
 
             excl = mso.get("excludeSwitches")
             if isinstance(excl, list) and excl:

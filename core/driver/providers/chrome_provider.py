@@ -30,15 +30,6 @@ class ChromeProvider(BrowserProvider):
         gco = block.get("goog:chromeOptions")
 
         if isinstance(gco, dict):
-            # theo Selenium/Chromium: args, prefs, excludeSwitches...
-            for a in gco.get("args", []) or []:
-                self._add_args(options, str(a))
-                Logger.debug(f"Adding Chrome argument: {a}")
-
-            prefs = gco.get("prefs")
-            if isinstance(prefs, dict):
-                self._set_chromium_prefs(options, prefs)
-                Logger.debug("Setting Chrome preferences.")
 
             excl = gco.get("excludeSwitches")
             if isinstance(excl, list) and excl:
