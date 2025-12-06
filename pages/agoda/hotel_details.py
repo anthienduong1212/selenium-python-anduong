@@ -1,9 +1,10 @@
 import allure
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Tuple, List
 
 from core.element.conditions import Condition
 from core.element.conditions import visible as cond_visible
 from core.element.locator import Locator
+from core.report.reporting import AllureReporter
 from core.utils.browser_utils import BrowserUtils
 from pages.agoda.enums.detailed_navbar_options import NavbarOptions
 from pages.base_page import BasePage
@@ -44,12 +45,21 @@ class HotelDetails(BasePage):
         return self.el(self.GRD_ROOM_FILTER).should_be(cond_visible())
 
     @allure.step("Check the {option} display or not")
-    def is_option_display(self, option: str):
+    def is_option_display(self, filter_name: str, filters: List[Dict[str, str]]):
         self.select_navbar_option(NavbarOptions.ROOMS)
         parent = self.wait_for_room_filter_display()
+        result: list = []
 
-        option = parent.find(self.OPT_ROOM_FILTER_OPTION(option=option))
-        return option.exists()
+        for filter_dict in filters:
+            option = filter_dict.get(filter_name)
+            if option is not None:
+                option_el = parent.find(self.OPT_ROOM_FILTER_OPTION(option=option))
+                if not option_el.exists():
+                    with AllureReporter.step(f"Missing option: {option}"):
+                        result.append({"option": option, "isDisplayed": False})
+                    return False
+
+        return True
 
     @allure.step("Add hotel to favorite")
     def add_to_favorites(self):
@@ -70,3 +80,19 @@ class HotelDetails(BasePage):
         hotel_addr = parent.find(self.TXT_HOTEL_ADDRESS).text()
 
         return {"name": hotel_name, "address": hotel_addr}
+
+    @allure.step("Checking hotel information")
+    def is_hotel_information_correct(self, expected: dict[str, Any]) -> bool:
+        actual = self.get_hotel_information()
+        different_values = {}
+        common_keys = set(actual.keys()) & set(expected.keys())
+
+        for key in common_keys:
+            if actual[key] != expected[key]:
+                with AllureReporter.step(f"Missing matching infor ACTUAL [{actual[key]}] | EXPECTED [{expected[key]}]"):
+                    different_values[key] = {
+                        'actual': actual[key],
+                        'expected': expected[key]
+                    }
+
+        return False if len(different_values) > 0 else True

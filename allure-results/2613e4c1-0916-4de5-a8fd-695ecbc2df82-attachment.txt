@@ -7,17 +7,13 @@
 [32mINFO    [0m SeleniumPythonLogger:logging.py:47 Applying vendor-specific Chrome JSON overrides (goog:chromeOptions)...
 [32mINFO    [0m SeleniumPythonLogger:logging.py:47 Using local driver.
 [32mINFO    [0m SeleniumPythonLogger:logging.py:47 Instantiating local Chrome WebDriver...
-[32mINFO    [0m SeleniumPythonLogger:logging.py:47 Resolved date: 2025-12-12 01:11:51.989439+07:00
-[32mINFO    [0m SeleniumPythonLogger:logging.py:47 Resolved date: 2025-12-15 01:11:51.990435+07:00
-[32mINFO    [0m SeleniumPythonLogger:logging.py:47 Found active inbox email: 583e5195-e582-4fa4-b203-f8ef5dc10bae@mailslurp.biz and inbox_id: 583e5195-e582-4fa4-b203-f8ef5dc10bae
+[32mINFO    [0m SeleniumPythonLogger:logging.py:47 Resolved date: 2025-12-07 10:35:15.341359+07:00
+[32mINFO    [0m SeleniumPythonLogger:logging.py:47 Resolved date: 2025-12-10 10:35:15.343363+07:00
 [32mINFO    [0m SeleniumPythonLogger:logging.py:47 PASS: Verify that there is no hotel with mismatched destination | Expected: 0, Actual: 0
 [32mINFO    [0m SeleniumPythonLogger:logging.py:47 [Resolve/Index] Start resolving for index 0, locator: //li[@data-selenium='hotel-item']
 [32mINFO    [0m SeleniumPythonLogger:logging.py:47 [Resolve/Index] Waiting for list to have enough elements...
 [32mINFO    [0m SeleniumPythonLogger:logging.py:47 [Resolve/Index] Found 11 elements (need > 0) in this wait cycle.
 [32mINFO    [0m SeleniumPythonLogger:logging.py:47 [Resolve/Index] Wait successful. Returning element at index 0.
-[32mINFO    [0m SeleniumPythonLogger:logging.py:47 PASS: Verify that hotel name is display correctly | Expected: 'Goldient Boutique Hotel', Actual: 'Goldient Boutique Hotel'
-[31m[1mERROR   [0m SeleniumPythonLogger:logging.py:55 FAIL: Verify that hotel address is display correctly |Condition: False
-[31m[1mERROR   [0m SeleniumPythonLogger:logging.py:55 FAIL: Verify that hotel room offer this service |Condition: False
-[32mINFO    [0m SeleniumPythonLogger:logging.py:47 Found email with subject: Your email OTP for Agoda. Fetching full email body.
+[1m[31mERROR   [0m SeleniumPythonLogger:logging.py:55 FAIL: Verify that hotel information is display correctly |Condition: False
 [32mINFO    [0m SeleniumPythonLogger:logging.py:47 Driver for browser chrome finished successfully.
 [32mINFO    [0m SeleniumPythonLogger:logging.py:47 Driver for browser chrome quit successfully.

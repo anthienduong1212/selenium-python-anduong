@@ -33,24 +33,13 @@ class TestBooking:
 
         result_page.filter_with_term(FiltersName.ROOM_OFFERS, booking_data.filters)
 
-        hotel_infor = result_page.get_search_hotel_results(1)
+        hotel_infor = result_page.get_search_hotel_results(1)[0]
         result_page.select_first_hotel()
 
-        actual = hotel_detail_page.get_hotel_information()
-        expected = hotel_infor[0]
+        soft_asserts.assert_true(hotel_detail_page.is_hotel_information_correct(hotel_infor),
+                                 "Verify that hotel information is display correctly")
 
-        actual_name = actual.get("name")
-        expected_name = expected.get("name")
-
-        hard_asserts.assert_equal(actual_name, expected_name, "Verify that hotel name is display correctly")
-
-        actual_addr = actual.get("address")
-        expected_addr = expected.get("address")
-
-        soft_asserts.assert_true(contains_text(actual_addr, expected_addr),
-                                 "Verify that hotel address is display correctly")
-
-        soft_asserts.assert_true(hotel_detail_page.is_option_display("Breakfast included"),
+        soft_asserts.assert_true(hotel_detail_page.is_option_display(FiltersName.ROOM_OFFERS, booking_data.filters),
                                  "Verify that hotel room offer this service")
 
     @pytest.mark.parametrize("booking_data", ["test_tc02"], indirect=True)
@@ -70,24 +59,14 @@ class TestBooking:
 
         result_page.filter_with_term(FiltersName.PROPERTIES_FACILITIES, booking_data.filters)
 
-        hotel_infor = result_page.get_search_hotel_results(1)
+        hotel_infor = result_page.get_search_hotel_results(1)[0]
         result_page.select_first_hotel()
 
-        actual = hotel_detail_page.get_hotel_information()
-        expected = hotel_infor[0]
+        soft_asserts.assert_true(hotel_detail_page.is_hotel_information_correct(hotel_infor),
+                                 "Verify that hotel information is display correctly")
 
-        actual_name = actual.get("name")
-        expected_name = expected.get("name")
-
-        hard_asserts.assert_equal(actual_name, expected_name, "Verify that hotel name is display correctly")
-
-        actual_addr = actual.get("address")
-        expected_addr = expected.get("address")
-
-        soft_asserts.assert_true(contains_text(actual_addr, expected_addr),
-                                 "Verify that hotel address is display correctly")
-
-        soft_asserts.assert_true(hotel_detail_page.is_option_display("Swimming pool"),
+        soft_asserts.assert_true(hotel_detail_page.is_option_display(FiltersName.PROPERTIES_FACILITIES,
+                                                                     booking_data.filters),
                                  "Verify that hotel room offer this service")
 
         hotel_detail_page.add_to_favorites()
