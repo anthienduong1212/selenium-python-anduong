@@ -5,8 +5,7 @@ import os
 import traceback
 from contextlib import contextmanager
 from pathlib import Path
-from tempfile import NamedTemporaryFile
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Any, Dict
 
 from allure_commons.types import AttachmentType, ParameterMode
 from selenium.webdriver.remote.webdriver import WebElement
@@ -159,7 +158,7 @@ class AllureReporter:
             AllureReporter.attach_element_screenshot(el)
             element.highlight(style="", duration_ms=0, undo=True)
         except Exception as e:
-            logging.warning(f"Could not capture or highlight element for screenshot: {e}")
+            Logger.warning(f"Could not capture or highlight element for screenshot: {e}")
 
     # =========================
     #  METADATA (dynamic)

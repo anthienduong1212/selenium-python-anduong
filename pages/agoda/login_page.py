@@ -17,7 +17,7 @@ class LoginPage(BasePage):
         super().__init__()
 
     # -------- LOGIN FORM ---------
-    _IFRAME_LOGIN_FORM = Locator.xpath("//iframe[@data-cy='ul-app-frame']", "HOMEPAGE Login iframe")
+    _IFRAME_LOGIN_FORM = Locator.xpath("//iframe[@data-cy='ul-app-frame']", "LOGIN_PAGE Login iframe")
     _FORM_LOGIN_PARENT = Locator.xpath("//div[@id='root']/div[@data-cy='mutation-sensor']", "LOGIN_PAGE Login form")
     _TXT_LOGIN_USERNAME = Locator.xpath("//input[@type='email']", "LOGIN_PAGE User name field")
     _BTN_LOGIN_CONTINUE = Locator.xpath("//button[@data-element-name='universal-login-unified-auth-email-continue']"
@@ -27,10 +27,10 @@ class LoginPage(BasePage):
     _TXT_FORM_SUB_HEADING = Locator.xpath("//div[@data-cy='form-sub-heading']/p", "LOGIN_PAGE OTP form sub heading")
     _TXT_OTP_BOX = Locator.xpath("//input[@data-cy={index}]", "LOGIN_PAGE 6 digits OTP fill box")
     _BTN_OTP_FORM_CONTINUE = Locator.xpath("//button[@data-element-name='universal-login-unified-auth-otp-continue']"
-                                                                 , "LOGIN_PAGE OTP form continue button")
+                                           , "LOGIN_PAGE OTP form continue button")
 
     @allure.step("Switch to iframe")
-    def switch_to_login_inframe(self):
+    def switch_to_login_iframe(self):
         iframe = self.el(self._IFRAME_LOGIN_FORM).should_be(cond_visible())
         iframe.switch_to_frame()
 
@@ -61,11 +61,20 @@ class LoginPage(BasePage):
         cont_btn = self.wait_otp_submit_button()
         cont_btn.click()
 
-    @allure.step("Login with username : {user_name}")
-    def login(self, user_name: str):
-        self.switch_to_login_inframe()
-        self.fill_email_username(user_name)
+    @allure.step("Login with OTP")
+    def login_with_otp(self, otp_mailbox):
+        self.click_login()
+
+        email_address: str = otp_mailbox["email"]
+        inbox_id: str = otp_mailbox["inbox_id"]
+        ms = otp_mailbox["ms"]
+
+        self.switch_to_login_iframe()
+        self.fill_email_username(email_address)
         self.click_continue()
+
+        self.submit_otp_from_email(ms, inbox_id, email_address)
+        BrowserUtils.switch_to_default_content()
 
     @allure.step("Wait for OTP send to email {email}")
     def get_otp_from_mail(self, mail_box: SlurpMailUtil, inbox_id: str, email: str) -> str:
@@ -93,11 +102,3 @@ class LoginPage(BasePage):
 
         self.type_otp_digits(otp)
         self.click_otp_form_continue()
-
-
-
-
-
-
-
-

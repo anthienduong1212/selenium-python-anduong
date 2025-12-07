@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import re
-from typing import Callable, Iterable, Optional
+import time
+
+from typing import Iterable, Optional
 
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
@@ -12,7 +14,6 @@ from core.driver.driver_conditions import (
     new_window_appeared,
     get_new_window_handle)
 from core.driver.driver_manager import DriverManager
-from core.driver.driver_wait import DriverWait
 from core.report.reporting import AllureReporter
 from core.waiter.wait import Waiter
 
@@ -88,6 +89,11 @@ class BrowserUtils:
             BrowserUtils._driver().switch_to.window(handle)
 
     @staticmethod
+    def switch_to_default_content() -> None:
+        with AllureReporter.step(f"Switch back to default"):
+            BrowserUtils._driver().switch_to.default_content()
+
+    @staticmethod
     def force_same_tab_link() -> None:
         """
         Call BEFORE click to have target=_blank / window.open links open in the current tab.
@@ -110,6 +116,22 @@ class BrowserUtils:
         BrowserUtils.wait_ready_state_complete()
 
         return new_h
+
+    @staticmethod
+    def scroll_to_bottom():
+        BrowserUtils._driver().execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        time.sleep(3)
+
+    @staticmethod
+    def scroll_to_top():
+        BrowserUtils._driver().execute_script("window.scrollTo(0, 0);")
+        time.sleep(2)
+
+    @staticmethod
+    def scroll_by_half_page():
+        viewport_height = BrowserUtils._driver().execute_script("return window.innerHeight")
+        BrowserUtils._driver().execute_script(f"window.scrollBy(0, {viewport_height / 2});")
+        time.sleep(2)
 
     # ----------------------------
     #      TAB_SWITCHING_ACTION

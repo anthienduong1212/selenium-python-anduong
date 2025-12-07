@@ -120,12 +120,15 @@ def texts_to_be_present_in_elements(texts: list) -> Condition:
     """
        Checks if all specified texts are present in the collection of elements.
     """
+
     def _texts_present_condition(locator_tuple):
         def _check(driver) -> bool:
             elements = EC.visibility_of_all_elements_located(locator_tuple)(driver)
             actual_texts = [el.text for el in elements]
             return all(text in actual_texts for text in texts)
+
         return _check
+
     return Condition(f"all texts {texts} are present",
                      ec_builder=lambda loc: _texts_present_condition(loc))
 
@@ -189,6 +192,17 @@ def not_covered() -> Condition:
             return False
 
     return Condition("not_covered", ec_builder=_js_predicate_builder(_pred))
+
+
+def attribute_contains(name: str, substring: str) -> Condition:
+    def _pred(e: WebElement) -> bool:
+        try:
+            return substring in (e.get_attribute(name))
+        except Exception:
+            Logger.debug("Attribute doesn't contain in element")
+            return False
+
+    return Condition(f'attr("{name}") contains "{substring}"', ec_builder=_js_predicate_builder(_pred))
 
 
 def click_ready() -> Condition:

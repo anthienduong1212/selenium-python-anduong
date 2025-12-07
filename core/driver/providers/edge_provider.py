@@ -1,5 +1,3 @@
-import json
-import os
 from typing import Any
 
 from selenium import webdriver
@@ -24,11 +22,9 @@ class EdgeProvider(BrowserProvider):
         return webdriver.Edge(options=options)
 
     def _apply_vendor_json(self, options: EdgeOptions, block: dict) -> None:
-        # Edge is Chromium-based; has "ms:edgeOptions" (vendor prefixed).
-        Logger.info("Applying vendor-specific Edge JSON overrides (ms:edgeOptions)...")
         mso = block.get("ms:edgeOptions")
         if isinstance(mso, dict):
-
+            Logger.info("Applying vendor-specific Edge JSON overrides (ms:edgeOptions)...")
             excl = mso.get("excludeSwitches")
             if isinstance(excl, list) and excl:
                 try:

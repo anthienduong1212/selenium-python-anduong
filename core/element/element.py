@@ -3,19 +3,15 @@ from __future__ import annotations
 import time
 from dataclasses import replace
 
-import allure
-from typing import List, Optional, Union
+from typing import List, Optional
 
 from selenium.common.exceptions import (ElementClickInterceptedException,
-                                        JavascriptException,
                                         NoSuchElementException,
                                         StaleElementReferenceException,
                                         TimeoutException)
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webdriver import WebDriver, WebElement
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 
 from core.configuration.configuration import Configuration
 from core.constants.constants import Constants
@@ -26,7 +22,6 @@ from core.element.conditions import visible as cond_visible
 from core.element.locator import Locator
 from core.logging.logging import Logger
 from core.report.reporting import AllureReporter
-from core.waiter.wait import Waiter
 
 
 class Element:
@@ -183,7 +178,7 @@ class Element:
     def click(self):
         """Click on the element."""
         with AllureReporter.step(f"Click on element {self.name}"):
-            self.should_be(cond_visible())
+            self.should_be(click_ready())
             try:
                 self.resolve().click()
 
@@ -203,7 +198,7 @@ class Element:
             if clear:
                 try:
                     el.clear()
-                except Exception:
+                except Exception as e:
                     Logger.debug(f"el.clear() failed for {self.name}: {e}. Falling back to Ctrl+A+Delete.")
                     el.send_keys(Keys.CONTROL, "a")
                     el.send_keys(Keys.DELETE)
@@ -296,6 +291,7 @@ class Element:
     def attr(self, name: str) -> Optional[str]:
         """Get attribute value of the element."""
         try:
+            self.resolve()
             return self.resolve().get_attribute(name)
         except Exception as e:
             Logger.error(f"Error getting attribute {name}: {e}")
@@ -352,7 +348,6 @@ class Element:
 
     def should_be(self, *conditions: Condition, timeout_ms: Optional[int] = None) -> "Element":
         """Wait until a specific condition is met for the element."""
-        driver = self._driver()
         locator_tuple = (self.locator.by, self.locator.value)
         desc = f'Element("{self.name}") should meet: ' + ", ".join(c.name for c in conditions)
 
@@ -506,22 +501,22 @@ class IndexedElement(Element):
 
     def resolve(self) -> WebElement:
         locator_tuple = (self.locator.by, self.locator.value)
-        Logger.info(f"[Resolve/Index] Start resolving for index {self.index}, locator: {locator_tuple[1]}")
+        Logger.debug(f"[Resolve/Index] Start resolving for index {self.index}, locator: {locator_tuple[1]}")
         waiter = DriverManager.get_webdriver_wait()
 
         def get_matching_elements(drv) -> list[WebElement] | bool:
             elements = drv.find_elements(*locator_tuple)
             current_count = len(elements)
-            Logger.info(f"[Resolve/Index] Found {current_count} elements (need > {self.index}) in this wait cycle.")
+            Logger.debug(f"[Resolve/Index] Found {current_count} elements (need > {self.index}) in this wait cycle.")
 
             if current_count > self.index:
                 return elements
             else:
                 return False
         try:
-            Logger.info(f"[Resolve/Index] Waiting for list to have enough elements...")
+            Logger.debug(f"[Resolve/Index] Waiting for list to have enough elements...")
             results = waiter.until(get_matching_elements)
-            Logger.info(f"[Resolve/Index] Wait successful. Returning element at index {self.index}.")
+            Logger.debug(f"[Resolve/Index] Wait successful. Returning element at index {self.index}.")
             return results[self.index]
 
         except TimeoutException:

@@ -20,12 +20,16 @@ class Logger:
         log_level_str = os.getenv("LOG_LEVEL", "INFO").upper()
         log_level = getattr(logging, log_level_str, logging.INFO)
 
+        file_handler = logging.FileHandler("app.log", mode="a", encoding="utf-8")
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler.enconding = "utf-8"
+
         logging.basicConfig(
             level=log_level,
             format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
             handlers=[
-                logging.StreamHandler(sys.stdout),
-                logging.FileHandler("app.log", mode="a")
+                console_handler,
+                file_handler
             ]
         )
         cls._logger = logging.getLogger("SeleniumPythonLogger")
@@ -35,7 +39,7 @@ class Logger:
     def get_logger(cls) -> logging.Logger:
         """Helper to ensure logger is initialized before use."""
         if cls._logger is None:
-            cls._setup_logging()
+            cls.setup_logging()
         return cls._logger
 
     @classmethod

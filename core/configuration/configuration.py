@@ -6,8 +6,9 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from dataclasses import replace as dc_replace
 from importlib import resources
+from importlib.abc import Traversable
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, Optional
 
 from core.logging.logging import Logger
 
@@ -71,7 +72,7 @@ class Configuration:
     # ================================
 
     @classmethod
-    def config_source_detection(cls, cli_path: Optional[str] = None) -> Optional[Path]:
+    def config_source_detection(cls, cli_path: Optional[str] = None) -> Path | Traversable:
         """
         Precedence:
         1) CLI --browser-config

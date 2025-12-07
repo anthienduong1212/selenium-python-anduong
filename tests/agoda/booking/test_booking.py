@@ -36,11 +36,11 @@ class TestBooking:
         hotel_infor = result_page.get_search_hotel_results(1)[0]
         result_page.select_first_hotel()
 
-        soft_asserts.assert_true(hotel_detail_page.is_hotel_information_correct(hotel_infor),
-                                 "Verify that hotel information is display correctly")
-
         soft_asserts.assert_true(hotel_detail_page.is_option_display(FiltersName.ROOM_OFFERS, booking_data.filters),
                                  "Verify that hotel room offer this service")
+
+        soft_asserts.assert_true(hotel_detail_page.is_hotel_information_correct(hotel_infor),
+                                 "Verify that hotel information is display correctly")
 
     @pytest.mark.parametrize("booking_data", ["test_tc02"], indirect=True)
     def test_tc02(self, booking_data: BookingData, hard_asserts, soft_asserts, otp_mailbox):
@@ -69,18 +69,6 @@ class TestBooking:
                                                                      booking_data.filters),
                                  "Verify that hotel room offer this service")
 
+        login_page.login_with_otp(otp_mailbox)
+
         hotel_detail_page.add_to_favorites()
-
-        email_address: str = otp_mailbox["email"]
-        inbox_id: str = otp_mailbox["inbox_id"]
-        ms = otp_mailbox["ms"]
-
-        login_page.login(email_address)
-        login_page.submit_otp_from_email(ms, inbox_id, email_address)
-
-
-
-
-
-
-

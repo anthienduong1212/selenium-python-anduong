@@ -1,10 +1,8 @@
-import json
-import os
 from abc import ABC, abstractmethod
-from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from selenium.webdriver.remote.webdriver import WebDriver
+from selenium import webdriver
 
 from core.configuration.configuration import Configuration
 from core.logging.logging import Logger

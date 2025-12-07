@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import os
 import re
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from typing import List, Optional, Tuple
 
 import mailslurp_client
-from mailslurp_client import ApiClient, Configuration
+from mailslurp_client import ApiClient
 from mailslurp_client.api.inbox_controller_api import InboxControllerApi
+from mailslurp_client.api.wait_for_controller_api import WaitForControllerApi
 from mailslurp_client.models import CreateInboxDto
 
 from core.logging.logging import Logger
@@ -26,8 +27,8 @@ class SlurpMailUtil:
         mail_cfg.api_key["x-api-key"] = api_key
 
         self.client = ApiClient(mail_cfg)
-        self.inbox_api = mailslurp_client.InboxControllerApi(self.client)
-        self.wait_api = mailslurp_client.WaitForControllerApi(self.client)
+        self.inbox_api = InboxControllerApi(self.client)
+        self.wait_api = WaitForControllerApi(self.client)
         self.mail_timeout_ms = mail_timeout_ms or Constants.LONG_DURATION_MS
         self.regex_otp = OPT_REGEX
 
@@ -67,7 +68,10 @@ class SlurpMailUtil:
                      inbox_id: str,
                      subject_contains: str | None = None,
                      unread_only: bool = True) -> str:
+
         """Wait for email and get the OTP"""
+        email_preview = None
+
         if subject_contains:
             match = mailslurp_client.MatchOptions(
                 matches=[
@@ -75,24 +79,30 @@ class SlurpMailUtil:
                 ]
             )
 
-            emails = self.wait_api.wait_for_matching_emails(inbox_id=inbox_id,
-                                                            timeout=self.mail_timeout_ms,
-                                                            unread_only=unread_only,
-                                                            match_options=match,
-                                                            count=1)
-            email = emails[0]
+            emails_list = self.wait_api.wait_for_matching_emails(
+                inbox_id=inbox_id,
+                timeout=self.mail_timeout_ms,
+                unread_only=unread_only,
+                match_options=match,
+                count=1,
+                sort='DESC'
+            )
 
-        else:
-            email = self.wait_api.wait_for_latest_email(inbox_id=inbox_id,
-                                                        timeout=self.mail_timeout_ms,
-                                                        unread_only=unread_only)
-        if email:
-            Logger.info(f"Found email with subject: {subject_contains}. Fetching full email body.")
-            email_full = self.inbox_api.get_latest_email_in_inbox(inbox_id, self.mail_timeout_ms)
-            body = (email_full.body or email_full.text or "")
+            if emails_list:
+                email_preview = emails_list[0]
+
+        if email_preview:
+            email_id = email_preview.inbox_id
+            full_email_dto = self.inbox_api.get_latest_email_in_inbox(email_id, self.mail_timeout_ms)
+            body = (full_email_dto.body or full_email_dto.text or "")
+
             m = re.search(self.regex_otp, body)
+
+            self.inbox_api.delete_all_inbox_emails(inbox_id)
             if not m:
-                raise AssertionError(f"Unable to get OTP in {email.id}")
+                raise AssertionError(f"Unable to get OTP in email ID: {email_id}. Body snippet: {body[:100]}...")
+
             return m.group(1)
         else:
-            Logger.error("Email not found !")
+            Logger.error("Email not found!")
+            raise TimeoutError("Timeout waiting for email.")

@@ -1,10 +1,6 @@
 from __future__ import annotations
 
-import json
-from abc import ABC
-
-import allure
-from typing import Any, Callable, Iterable, Mapping, Optional
+from typing import Any, Iterable, Optional
 
 import pytest_check as soft_assert_check
 
@@ -20,7 +16,7 @@ class SoftAsserts(BaseAssertion):
         description = f"{msg} | Expected: {expected!r}, Actual: {actual!r}"
 
         with self.assertion_step(f"{description}"):
-            _attach_json_allure("Expected vs Actual", {"expected": expected, "actual": actual})
+            BaseAssertion.attach_json_allure("Expected vs Actual", {"expected": expected, "actual": actual})
 
             result = soft_assert_check.equal(actual == expected, description)
             if result:
@@ -63,7 +59,7 @@ class SoftAsserts(BaseAssertion):
         with self.assertion_step(f"{description}"):
             result = soft_assert_check.is_in(member in container, description)
             container_display = list(container) if not isinstance(container, (str, bytes)) else {"text": container}
-            _attach_json_allure("Container", container_display)
+            BaseAssertion.attach_json_allure("Container", container_display)
 
             if result:
                 Logger.info(f"PASS: {description}")
@@ -78,7 +74,7 @@ class SoftAsserts(BaseAssertion):
         with self.assertion_step(f"Assert not in: {description}"):
             result = soft_assert_check.is_not_in(member not in container, description)
             container_display = list(container) if not isinstance(container, (str, bytes)) else {"text": container}
-            _attach_json_allure("Container", container_display)
+            BaseAssertion.attach_json_allure("Container", container_display)
 
             if result:
                 Logger.info(f"PASS: {description}")
@@ -90,7 +86,7 @@ class SoftAsserts(BaseAssertion):
 
         actual_len = len(obj)
         description = f"{msg} |Length mismatch. Expected: {expected_len}, Actual: {actual_len}"
-        _attach_json_allure("Length check", {"expected_len": expected_len, "actual_len": actual_len})
+        BaseAssertion.attach_json_allure("Length check", {"expected_len": expected_len, "actual_len": actual_len})
 
         with self.assertion_step(f"Assert length: {description}"):
             result = soft_assert_check.is_true(actual_len == expected_len, description)
@@ -106,7 +102,7 @@ class SoftAsserts(BaseAssertion):
 
         is_in_range = (lo <= num <= hi) if inclusive else (lo < num < hi)
         description = f"{msg} |{num} not in range [{lo}, {hi}{']' if inclusive else ')'}]"
-        _attach_json_allure("Range", {"value": num, "lo": lo, "hi": hi, "inclusive": inclusive})
+        BaseAssertion.attach_json_allure("Range", {"value": num, "lo": lo, "hi": hi, "inclusive": inclusive})
 
         with self.assertion_step(f"Assert between: {description}"):
             result = soft_assert_check.is_true(is_in_range, description)

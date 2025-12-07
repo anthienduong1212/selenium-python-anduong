@@ -1,5 +1,3 @@
-import json
-import os
 from typing import Any
 
 from selenium import webdriver
@@ -26,11 +24,10 @@ class ChromeProvider(BrowserProvider):
         return webdriver.Chrome(options=options)
 
     def _apply_vendor_json(self, options: ChromeOptions, block: dict) -> None:
-        Logger.info("Applying vendor-specific Chrome JSON overrides (goog:chromeOptions)...")
         gco = block.get("goog:chromeOptions")
 
         if isinstance(gco, dict):
-
+            Logger.info("Applying vendor-specific Chrome JSON overrides (goog:chromeOptions)...")
             excl = gco.get("excludeSwitches")
             if isinstance(excl, list) and excl:
                 try:
